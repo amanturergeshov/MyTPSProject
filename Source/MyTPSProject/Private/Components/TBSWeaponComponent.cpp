@@ -4,6 +4,7 @@
 #include "Weapons/TPSPistolWeapon.h"
 #include "GameFramework/Character.h"
 #include "Animations/TPSReloadAnimNotify.h"
+#include "Net/UnrealNetwork.h"
 // Sets default values for this component's properties
 UTBSWeaponComponent::UTBSWeaponComponent()
 {

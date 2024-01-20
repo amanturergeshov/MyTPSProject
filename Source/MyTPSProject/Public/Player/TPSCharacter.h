@@ -60,17 +60,33 @@ public:
     bool IsSprinting() const;*/
 
     //_______________________________________–≈œÀ» ¿÷»ﬂ________
+    //StartSprint
     UFUNCTION(Server, Reliable)
     void ServerOnStartSprint();
     UFUNCTION(NetMulticast, Reliable)
     void MulticastOnStartSprint();
 
     //______________________________________________________________
+    //StopSprint
     UFUNCTION(Server, Reliable)
     void ServerOnStopSprint();
     UFUNCTION(NetMulticast, Reliable)
     void MulticastOnStopSprint();
     //_____________________________________________________________
+    // StartCombat
+    UFUNCTION(Server, Reliable)
+    void ServerOnStartCombat();
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastOnStartCombat();
+
+    //______________________________________________________________
+    // StopCombat
+    UFUNCTION(Server, Reliable)
+    void ServerOnStopCombat();
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastOnStopCombat();
+
+    //______________________________________________________________
 
 
     UFUNCTION(BlueprintCallable, Category = "Movement")

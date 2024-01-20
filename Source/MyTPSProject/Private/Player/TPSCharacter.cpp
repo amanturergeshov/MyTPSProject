@@ -124,8 +124,8 @@ void ATPSCharacter::OnStartSprint()
     StopCombat();
     if (!HeavyWeapon())
     {
-        //WantsToRun = isMovingForward && !GetVelocity().IsZero();
-        WantsToRun =true;
+        // WantsToRun = isMovingForward && !GetVelocity().IsZero();
+        WantsToRun = true;
     }
     else
     {
@@ -182,21 +182,47 @@ void ATPSCharacter::OnHealthChanged(float Health)
 void ATPSCharacter::StartCombat()
 {
     // if (!IsSprinting())
-    if (!WantsToRun)
+
+    //if (!WantsToRun)
+    //{
+    //    IsFighting = true;
+    //    WeaponComponent->StartFire();
+    //}
+    if (HasAuthority())
     {
-        IsFighting = true;
-        WeaponComponent->StartFire();
+        if (!WantsToRun)
+        {
+            IsFighting = true;
+            WeaponComponent->StartFire();
+        }
+        MulticastOnStartCombat();
+    }
+    else
+    {
+
+        ServerOnStartCombat();
     }
 }
 
 void ATPSCharacter::StopCombat()
 {
-    IsFighting = false;
-    WeaponComponent->StopFire();
+    //IsFighting = false;
+    //WeaponComponent->StopFire();
+    if (HasAuthority())
+    {
+        IsFighting = false;
+        WeaponComponent->StopFire();
+        MulticastOnStopCombat();
+    }
+    else
+    {
+
+        ServerOnStopCombat();
+    }
 }
 
 //______________________________ÎÑÒÎÐÎÆÍÎ! ÄÀËÜØÅ ÐÅÏËÈÊÀÖÈß!____________________________
-//StartSprint
+// StartSprint
 void ATPSCharacter::ServerOnStartSprint_Implementation()
 {
     MulticastOnStartSprint();
@@ -208,7 +234,7 @@ void ATPSCharacter::MulticastOnStartSprint_Implementation()
         StopCombat();
         if (!HeavyWeapon())
         {
-            //WantsToRun = isMovingForward && !GetVelocity().IsZero();
+            // WantsToRun = isMovingForward && !GetVelocity().IsZero();
             WantsToRun = true;
         }
         else
@@ -218,7 +244,7 @@ void ATPSCharacter::MulticastOnStartSprint_Implementation()
     }
 }
 //_______________________________________________________
-//StopSprint
+// StopSprint
 void ATPSCharacter::ServerOnStopSprint_Implementation()
 {
     MulticastOnStopSprint();
@@ -230,3 +256,36 @@ void ATPSCharacter::MulticastOnStopSprint_Implementation()
         WantsToRun = false;
     }
 }
+//_________________________________________________
+// StartCombat
+void ATPSCharacter::ServerOnStartCombat_Implementation()
+{
+    MulticastOnStartCombat();
+}
+void ATPSCharacter::MulticastOnStartCombat_Implementation()
+{
+    if (!IsLocallyControlled())
+    {
+        if (!WantsToRun)
+        {
+            IsFighting = true;
+            WeaponComponent->StartFire();
+        }
+    }
+}
+//_______________________________________________________
+// StopCombat
+void ATPSCharacter::ServerOnStopCombat_Implementation()
+{
+    MulticastOnStopCombat();
+}
+void ATPSCharacter::MulticastOnStopCombat_Implementation()
+{
+    if (!IsLocallyControlled())
+    {
+        UE_LOG(LogTemp, Warning, TEXT("BUM!"))
+        IsFighting = false;
+        WeaponComponent->StopFire();
+    }
+}
+//_______________________________________________________
