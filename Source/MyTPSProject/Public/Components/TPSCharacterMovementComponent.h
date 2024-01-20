@@ -16,7 +16,9 @@ class MYTPSPROJECT_API UTPSCharacterMovementComponent : public UCharacterMovemen
 
 public:
     virtual float GetMaxSpeed() const override;
+    
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-    UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Movement")
+    UPROPERTY(Replicated, EditDefaultsOnly, BlueprintReadWrite, Category = "Movement")
     float Modifier = 400;
 };

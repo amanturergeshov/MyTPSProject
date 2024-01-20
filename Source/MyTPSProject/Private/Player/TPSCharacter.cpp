@@ -39,8 +39,6 @@ ATPSCharacter::ATPSCharacter(const FObjectInitializer& ObjInit)
     SetReplicateMovement(true);
 }
 
-
-
 // Called when the game starts or when spawned
 void ATPSCharacter::BeginPlay()
 {
@@ -67,8 +65,8 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
 
     PlayerInputComponent->BindAxis("MoveForward", this, &ATPSCharacter::MoveForward);
     PlayerInputComponent->BindAxis("MoveRight", this, &ATPSCharacter::MoveRight);
-    //PlayerInputComponent->BindAxis("LookUp", this, &ATPSCharacter::AddControllerPitchInput);
-    //PlayerInputComponent->BindAxis("TurnAround", this, &ATPSCharacter::AddControllerYawInput);
+    // PlayerInputComponent->BindAxis("LookUp", this, &ATPSCharacter::AddControllerPitchInput);
+    // PlayerInputComponent->BindAxis("TurnAround", this, &ATPSCharacter::AddControllerYawInput);
     PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ATPSCharacter::Jump);
     PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ATPSCharacter::OnStartSprint);
     PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ATPSCharacter::OnStopSprint);
@@ -80,18 +78,18 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
     PlayerInputComponent->BindAction("Reload", IE_Pressed, WeaponComponent, &UTBSWeaponComponent::Reload);
 }
 
-bool ATPSCharacter::IsSprinting() const
-{
-    if (!HeavyWeapon())
-    {
-        return WantsToRun && isMovingForward && !GetVelocity().IsZero();
-    }
-    else
-    {
-        return false;
-    }
-    
-}
+// bool ATPSCharacter::IsSprinting() const
+//{
+//     if (!HeavyWeapon())
+//     {
+//         return WantsToRun && isMovingForward && !GetVelocity().IsZero();
+//     }
+//     else
+//     {
+//         return false;
+//     }
+//
+// }
 
 bool ATPSCharacter::InCombat() const
 {
@@ -103,7 +101,7 @@ bool ATPSCharacter::HeavyWeapon() const
     return WeaponComponent->GetEquipType();
 }
 
-void ATPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const 
+void ATPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME(ATPSCharacter, IsFighting);
@@ -124,18 +122,42 @@ void ATPSCharacter::MoveRight(float Amount)
 void ATPSCharacter::OnStartSprint()
 {
     StopCombat();
-    WantsToRun = true;
+    if (!HeavyWeapon())
+    {
+        //WantsToRun = isMovingForward && !GetVelocity().IsZero();
+        WantsToRun =true;
+    }
+    else
+    {
+        WantsToRun = false;
+    }
+    if (HasAuthority())
+    {
+        MulticastOnStartSprint();
+    }
+    else
+    {
+        ServerOnStartSprint();
+    }
 }
 
 void ATPSCharacter::OnStopSprint()
 {
     WantsToRun = false;
+    if (HasAuthority())
+    {
+        MulticastOnStopSprint();
+    }
+    else
+    {
+        ServerOnStopSprint();
+    }
 }
 void ATPSCharacter::OnDeath()
 {
     UE_LOG(LogTemp, Warning, TEXT("Plater %s is dead"), *GetName());
 
-    //PlayAnimMontage(DeathAnimMontage);
+    // PlayAnimMontage(DeathAnimMontage);
 
     GetCharacterMovement()->DisableMovement();
 
@@ -159,7 +181,8 @@ void ATPSCharacter::OnHealthChanged(float Health)
 
 void ATPSCharacter::StartCombat()
 {
-    if (!IsSprinting())
+    // if (!IsSprinting())
+    if (!WantsToRun)
     {
         IsFighting = true;
         WeaponComponent->StartFire();
@@ -170,4 +193,40 @@ void ATPSCharacter::StopCombat()
 {
     IsFighting = false;
     WeaponComponent->StopFire();
+}
+
+//______________________________Œ—“Œ–Œ∆ÕŒ! ƒ¿À‹ÿ≈ –≈œÀ» ¿÷»ﬂ!____________________________
+//StartSprint
+void ATPSCharacter::ServerOnStartSprint_Implementation()
+{
+    MulticastOnStartSprint();
+}
+void ATPSCharacter::MulticastOnStartSprint_Implementation()
+{
+    if (!IsLocallyControlled())
+    {
+        StopCombat();
+        if (!HeavyWeapon())
+        {
+            //WantsToRun = isMovingForward && !GetVelocity().IsZero();
+            WantsToRun = true;
+        }
+        else
+        {
+            WantsToRun = false;
+        }
+    }
+}
+//_______________________________________________________
+//StopSprint
+void ATPSCharacter::ServerOnStopSprint_Implementation()
+{
+    MulticastOnStopSprint();
+}
+void ATPSCharacter::MulticastOnStopSprint_Implementation()
+{
+    if (!IsLocallyControlled())
+    {
+        WantsToRun = false;
+    }
 }

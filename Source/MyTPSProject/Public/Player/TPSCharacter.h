@@ -45,21 +45,33 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* DeathAnimMontage;
 
-    //UPROPERTY(Replicated,VisibleAnywhere, BlueprintReadWrite)
-    //float Health = HealthComponent->GetHealth();
-
+    // UPROPERTY(Replicated,VisibleAnywhere, BlueprintReadWrite)
+    // float Health = HealthComponent->GetHealth();
 
     virtual void BeginPlay() override;
 
 public:
-    // Called every frame
+    
     virtual void Tick(float DeltaTime) override;
 
-    // Called to bind functionality to input
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-    UFUNCTION( BlueprintCallable, Category = "Movement")
-    bool IsSprinting() const;
+    /*UFUNCTION( BlueprintCallable, Category = "Movement")
+    bool IsSprinting() const;*/
+
+    //_______________________________________–≈œÀ» ¿÷»ﬂ________
+    UFUNCTION(Server, Reliable)
+    void ServerOnStartSprint();
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastOnStartSprint();
+
+    //______________________________________________________________
+    UFUNCTION(Server, Reliable)
+    void ServerOnStopSprint();
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastOnStopSprint();
+    //_____________________________________________________________
+
 
     UFUNCTION(BlueprintCallable, Category = "Movement")
     bool InCombat() const;
@@ -84,7 +96,7 @@ private:
     void OnStopSprint();
 
     void OnDeath();
-    
+
     void OnHealthChanged(float);
 
     UFUNCTION(BlueprintCallable)
@@ -92,7 +104,4 @@ private:
 
     UFUNCTION(BlueprintCallable)
     void StopCombat();
-
-    
-
 };
