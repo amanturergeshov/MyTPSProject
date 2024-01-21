@@ -38,6 +38,7 @@ void UTBSWeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
     Super::EndPlay(EndPlayReason);
 }
 
+
 void UTBSWeaponComponent::SpawnWeapons()
 {
 
@@ -142,6 +143,14 @@ void UTBSWeaponComponent::PlayAnimMontage(UAnimMontage* Animation)
     if (!Character)
         return;
     Character->PlayAnimMontage(Animation);
+    if (Character->HasAuthority())
+    {
+        MulticastPlayAnimation(Animation);
+    }
+    else
+    {
+        ServerPlayAnimation(Animation);
+    }
 }
 
 void UTBSWeaponComponent::OnReloadFinished(USkeletalMeshComponent* MeshComp)
@@ -162,19 +171,28 @@ bool UTBSWeaponComponent::CanReload() const
     return CurrentWeapon && !ReloadAnimInProgress && CurrentWeapon->CanReload();
 }
 
-void UTBSWeaponComponent::OnEmptyClip() 
+void UTBSWeaponComponent::OnEmptyClip()
 {
     ChangeClip();
 }
 
 void UTBSWeaponComponent::ChangeClip()
 {
+    ACharacter* Character = Cast<ACharacter>(GetOwner());
     if (!CanReload())
         return;
     StopFire();
     CurrentWeapon->ChangeClip();
     ReloadAnimInProgress = true;
     PlayAnimMontage(CurrenReloadAnimMontage);
+    if (Character->HasAuthority())
+    {
+        MulticastChangeClip();
+    }
+    else
+    {
+        ServerChangeClip();
+    }
 }
 
 void UTBSWeaponComponent::StartFire()
@@ -223,4 +241,66 @@ int32 UTBSWeaponComponent::GetCurrentClips()
     return CurrentWeapon->GetClips();
 }
 
+//_____________________________________–≈œÀ» ¿÷»ﬂ!__________________________________
+
+
+void UTBSWeaponComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const 
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+
+    DOREPLIFETIME(UTBSWeaponComponent, CurrenReloadAnimMontage);
+}
+
+
+
+
+//Reload
+
+void UTBSWeaponComponent::ServerChangeClip_Implementation()
+{
+    MulticastChangeClip();
+}
+
+void UTBSWeaponComponent::MulticastChangeClip_Implementation() {
+    ACharacter* Character = Cast<ACharacter>(GetOwner());
+    if (Character->IsLocallyControlled())
+    {
+        return;
+    }
+    else
+    {
+        if (!CanReload())
+            return;
+        StopFire();
+        CurrentWeapon->ChangeClip();
+        ReloadAnimInProgress = true;
+        PlayAnimMontage(CurrenReloadAnimMontage);
+    }
+    
+}
+
+//__________________________________________________________________________________________________________________
+
+void UTBSWeaponComponent::ServerPlayAnimation_Implementation(UAnimMontage* Animation)
+{
+    MulticastPlayAnimation(Animation);
+}
+
+void UTBSWeaponComponent::MulticastPlayAnimation_Implementation(UAnimMontage* Animation)
+{
+    ACharacter* Character = Cast<ACharacter>(GetOwner());
+    if (Character->IsLocallyControlled())
+    {
+        return;
+    }
+    else
+    {
+        if (!Character)
+            return;
+        Character->PlayAnimMontage(Animation);
+    }
+}
+
+//_________________________________________________________________________________
+//Equip Animation
 

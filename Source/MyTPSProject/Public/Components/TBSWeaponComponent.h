@@ -63,6 +63,26 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* HeavyEquipAnimMontage;
 
+    //___________________________________–≈œÀ» ¿÷»ﬂ_____________________
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
+
+    //_________________________________
+    //Reload
+    UFUNCTION(Server,Reliable)
+    void ServerChangeClip();
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastChangeClip();
+    
+    //__________________________________________
+    //ReloadAnimation
+    UFUNCTION(Server, Reliable)
+    void ServerPlayAnimation(UAnimMontage* Animation);
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastPlayAnimation(UAnimMontage* Animation);
+    //__________________________________________
+
+
+
 private:
     UPROPERTY()
     ATPSPistolWeapon* CurrentWeapon = nullptr;
@@ -70,7 +90,7 @@ private:
     UPROPERTY()
     TArray<ATPSPistolWeapon*> Weapons;
 
-    UPROPERTY()
+    UPROPERTY(Replicated)
     UAnimMontage* CurrenReloadAnimMontage = nullptr;
 
     int32 CurrentWeaponIndex = 0;
