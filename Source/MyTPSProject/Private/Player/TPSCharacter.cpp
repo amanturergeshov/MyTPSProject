@@ -78,18 +78,26 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
     PlayerInputComponent->BindAction("Reload", IE_Pressed, WeaponComponent, &UTBSWeaponComponent::Reload);
 }
 
-// bool ATPSCharacter::IsSprinting() const
-//{
-//     if (!HeavyWeapon())
-//     {
-//         return WantsToRun && isMovingForward && !GetVelocity().IsZero();
-//     }
-//     else
-//     {
-//         return false;
-//     }
-//
-// }
+void ATPSCharacter::SetSprinting()
+{
+    if (!HeavyWeapon())
+    {
+        // IsSprinting = WantsToRun && isMovingForward;
+        IsSprinting = WantsToRun && isMovingForward && !GetVelocity().IsZero();
+    }
+    else
+    {
+        IsSprinting = false;
+    }
+    if (HasAuthority())
+    {
+        MulticastSetSprinting();
+    }
+    else
+    {
+        ServerSetSprinting();
+    }
+}
 
 bool ATPSCharacter::InCombat() const
 {
@@ -106,31 +114,46 @@ void ATPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME(ATPSCharacter, IsFighting);
     DOREPLIFETIME(ATPSCharacter, WantsToRun);
+    DOREPLIFETIME(ATPSCharacter, isMovingForward);
+    DOREPLIFETIME(ATPSCharacter, IsSprinting);
 }
 
 void ATPSCharacter::MoveForward(float Amount)
 {
     isMovingForward = Amount > 0.0f;
     AddMovementInput(GetActorForwardVector(), Amount);
+    if (HasAuthority())
+    {
+        MulticastMoveForward(Amount);
+    }
+    else
+    {
+        ServerMoveForward(Amount);
+    }
 }
 
 void ATPSCharacter::MoveRight(float Amount)
 {
+    SetSprinting();
     AddMovementInput(GetActorRightVector(), Amount);
 }
 
 void ATPSCharacter::OnStartSprint()
 {
     StopCombat();
-    if (!HeavyWeapon())
-    {
-        // WantsToRun = isMovingForward && !GetVelocity().IsZero();
-        WantsToRun = true;
-    }
-    else
-    {
-        WantsToRun = false;
-    }
+    // if (!HeavyWeapon())
+    //{
+    //      WantsToRun = isMovingForward && !GetVelocity().IsZero();
+    //     WantsToRun = isMovingForward;
+    //     WantsToRun = true;
+    // }
+    // else
+    //{
+    //     WantsToRun = false;
+    // }
+
+    WantsToRun = true;
+    SetSprinting();
     if (HasAuthority())
     {
         MulticastOnStartSprint();
@@ -144,6 +167,7 @@ void ATPSCharacter::OnStartSprint()
 void ATPSCharacter::OnStopSprint()
 {
     WantsToRun = false;
+    SetSprinting();
     if (HasAuthority())
     {
         MulticastOnStopSprint();
@@ -183,18 +207,18 @@ void ATPSCharacter::StartCombat()
 {
     // if (!IsSprinting())
 
-    //if (!WantsToRun)
-    //{
-    //    IsFighting = true;
-    //    WeaponComponent->StartFire();
-    //}
+     if (!WantsToRun)
+    {
+         IsFighting = true;
+         WeaponComponent->StartFire();
+     }
     if (HasAuthority())
     {
-        if (!WantsToRun)
-        {
-            IsFighting = true;
-            WeaponComponent->StartFire();
-        }
+        //if (!WantsToRun)
+        //{
+        //    IsFighting = true;
+        //    WeaponComponent->StartFire();
+        //}
         MulticastOnStartCombat();
     }
     else
@@ -206,12 +230,12 @@ void ATPSCharacter::StartCombat()
 
 void ATPSCharacter::StopCombat()
 {
-    //IsFighting = false;
-    //WeaponComponent->StopFire();
+     IsFighting = false;
+     WeaponComponent->StopFire();
     if (HasAuthority())
     {
-        IsFighting = false;
-        WeaponComponent->StopFire();
+        //IsFighting = false;
+        //WeaponComponent->StopFire();
         MulticastOnStopCombat();
     }
     else
@@ -232,15 +256,18 @@ void ATPSCharacter::MulticastOnStartSprint_Implementation()
     if (!IsLocallyControlled())
     {
         StopCombat();
-        if (!HeavyWeapon())
-        {
-            // WantsToRun = isMovingForward && !GetVelocity().IsZero();
-            WantsToRun = true;
-        }
-        else
-        {
-            WantsToRun = false;
-        }
+        // if (!HeavyWeapon())
+        //{
+        //      WantsToRun = isMovingForward && !GetVelocity().IsZero();
+        //     //WantsToRun = isMovingForward;
+        //     //WantsToRun = true;
+        // }
+        // else
+        //{
+        //     WantsToRun = false;
+        // }
+        WantsToRun = true;
+        SetSprinting();
     }
 }
 //_______________________________________________________
@@ -254,6 +281,7 @@ void ATPSCharacter::MulticastOnStopSprint_Implementation()
     if (!IsLocallyControlled())
     {
         WantsToRun = false;
+        SetSprinting();
     }
 }
 //_________________________________________________
@@ -266,7 +294,7 @@ void ATPSCharacter::MulticastOnStartCombat_Implementation()
 {
     if (!IsLocallyControlled())
     {
-        if (!WantsToRun)
+        if (!IsSprinting)
         {
             IsFighting = true;
             WeaponComponent->StartFire();
@@ -289,3 +317,39 @@ void ATPSCharacter::MulticastOnStopCombat_Implementation()
     }
 }
 //_______________________________________________________
+// StopCombat
+void ATPSCharacter::ServerMoveForward_Implementation(float Amount)
+{
+    MulticastMoveForward(Amount);
+}
+void ATPSCharacter::MulticastMoveForward_Implementation(float Amount)
+{
+    if (!IsLocallyControlled())
+    {
+        isMovingForward = Amount > 0.0f;
+        AddMovementInput(GetActorForwardVector(), Amount);
+    }
+}
+//_______________________________________________________
+
+void ATPSCharacter::ServerSetSprinting_Implementation()
+{
+    MulticastSetSprinting();
+}
+
+void ATPSCharacter::MulticastSetSprinting_Implementation()
+{
+    if (!IsLocallyControlled())
+    {
+        if (!HeavyWeapon())
+        {
+            IsSprinting = WantsToRun && isMovingForward && !GetVelocity().IsZero();
+            // IsSprinting = WantsToRun && isMovingForward;
+        }
+        else
+        {
+            IsSprinting = false;
+            SetSprinting();
+        }
+    }
+}

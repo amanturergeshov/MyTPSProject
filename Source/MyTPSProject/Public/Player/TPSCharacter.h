@@ -51,23 +51,22 @@ protected:
     virtual void BeginPlay() override;
 
 public:
-    
     virtual void Tick(float DeltaTime) override;
 
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 
-    /*UFUNCTION( BlueprintCallable, Category = "Movement")
-    bool IsSprinting() const;*/
+    UFUNCTION(BlueprintCallable, Category = "Movement")
+    void SetSprinting();
 
     //_______________________________________–≈œÀ» ¿÷»ﬂ________
-    //StartSprint
+    // StartSprint
     UFUNCTION(Server, Reliable)
     void ServerOnStartSprint();
     UFUNCTION(NetMulticast, Reliable)
     void MulticastOnStartSprint();
 
     //______________________________________________________________
-    //StopSprint
+    // StopSprint
     UFUNCTION(Server, Reliable)
     void ServerOnStopSprint();
     UFUNCTION(NetMulticast, Reliable)
@@ -87,7 +86,20 @@ public:
     void MulticastOnStopCombat();
 
     //______________________________________________________________
+    // MoveForward
+    UFUNCTION(Server, Reliable)
+    void ServerMoveForward(float Amount);
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastMoveForward(float Amount);
 
+    //______________________________________________________________
+    // MoveForward
+    UFUNCTION(Server, Reliable)
+    void ServerSetSprinting();
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastSetSprinting();
+
+    //______________________________________________________________
 
     UFUNCTION(BlueprintCallable, Category = "Movement")
     bool InCombat() const;
@@ -97,14 +109,19 @@ public:
 
     void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
-    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite)
+    UPROPERTY(Replicated, BlueprintReadWrite)
     bool IsFighting = false;
 
-    UPROPERTY(Replicated, VisibleAnywhere, BlueprintReadWrite)
+    UPROPERTY(Replicated, BlueprintReadWrite)
     bool WantsToRun = false;
 
-private:
+    UPROPERTY(Replicated, BlueprintReadWrite)
+    bool IsSprinting = false;
+
+    UPROPERTY(Replicated, BlueprintReadWrite)
     bool isMovingForward = false;
+
+private:
     void MoveForward(float Amount);
     void MoveRight(float Amount);
 
