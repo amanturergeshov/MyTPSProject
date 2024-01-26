@@ -11,15 +11,14 @@
 #include "Components/CapsuleComponent.h"
 #include "GameFramework/Controller.h"
 #include "Net/UnrealNetwork.h"
+#include "EnhancedInputComponent.h"
+#include "EnhancedInputSubsystems.h"
 
-// Sets default values
 ATPSCharacter::ATPSCharacter(const FObjectInitializer& ObjInit)
     : Super(
           ObjInit.SetDefaultSubobjectClass<UTPSCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
 {
-    // Set this character to call Tick() every frame.  You can turn this off to improve performance if you don't need
-    // it.
-    PrimaryActorTick.bCanEverTick = true;
+
     SpringArmComponent = CreateDefaultSubobject<USpringArmComponent>("SpringArmComponent");
     CameraComponent = CreateDefaultSubobject<UCameraComponent>("CameraComponent");
     SpringArmComponent->SetupAttachment(GetRootComponent());
@@ -34,15 +33,27 @@ ATPSCharacter::ATPSCharacter(const FObjectInitializer& ObjInit)
     HealthTextComponent = CreateDefaultSubobject<UTextRenderComponent>("HealthTextComponent");
     HealthTextComponent->SetupAttachment(GetRootComponent());
     WeaponComponent = CreateDefaultSubobject<UTBSWeaponComponent>("WeaponComponent");
+
+    PrimaryActorTick.bCanEverTick = true;
     SetReplicates(true);
     bReplicates = true;
     SetReplicateMovement(true);
 }
 
-// Called when the game starts or when spawned
 void ATPSCharacter::BeginPlay()
 {
     Super::BeginPlay();
+
+    //---------------------New Input System-------------------------------------------------
+    if (APlayerController* PlayerController = Cast<APlayerController>(Controller))
+    {
+        if (UEnhancedInputLocalPlayerSubsystem* Subsystem =
+                ULocalPlayer::GetSubsystem<UEnhancedInputLocalPlayerSubsystem>(PlayerController->GetLocalPlayer()))
+        {
+            Subsystem->AddMappingContext(SlashContext, 0);
+        }
+    }
+    //______________________________________________________________________________________
 
     check(HealthComponent);
     check(HealthTextComponent);
@@ -52,37 +63,59 @@ void ATPSCharacter::BeginPlay()
     HealthComponent->OnHealthChanged.AddUObject(this, &ATPSCharacter::OnHealthChanged);
 }
 
-// Called every frame
+
 void ATPSCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 }
 
-// Called to bind functionality to input
+
 void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
     Super::SetupPlayerInputComponent(PlayerInputComponent);
 
-    PlayerInputComponent->BindAxis("MoveForward", this, &ATPSCharacter::MoveForward);
-    PlayerInputComponent->BindAxis("MoveRight", this, &ATPSCharacter::MoveRight);
-    // PlayerInputComponent->BindAxis("LookUp", this, &ATPSCharacter::AddControllerPitchInput);
-    // PlayerInputComponent->BindAxis("TurnAround", this, &ATPSCharacter::AddControllerYawInput);
-    PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ATPSCharacter::Jump);
-    PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ATPSCharacter::OnStartSprint);
-    PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ATPSCharacter::OnStopSprint);
-    // PlayerInputComponent->BindAction("Shoot", IE_Pressed, WeaponComponent, &UTBSWeaponComponent::StartFire);
-    // PlayerInputComponent->BindAction("Shoot", IE_Released, WeaponComponent, &UTBSWeaponComponent::StopFire);
-    PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &ATPSCharacter::StartCombat);
-    PlayerInputComponent->BindAction("Shoot", IE_Released, this, &ATPSCharacter::StopCombat);
-    PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, WeaponComponent, &UTBSWeaponComponent::NextWeapon);
-    PlayerInputComponent->BindAction("Reload", IE_Pressed, WeaponComponent, &UTBSWeaponComponent::Reload);
+    //_________________________NEW INPUT SYSTEM_____________________________________________
+
+    if (UEnhancedInputComponent* EnhancedInputComponent = CastChecked<UEnhancedInputComponent>(PlayerInputComponent))
+    {
+        EnhancedInputComponent->BindAction(MovementAction, ETriggerEvent::Triggered, this, &ATPSCharacter::Move);
+        EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ATPSCharacter::Jump);
+        EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ATPSCharacter::OnStartSprint);
+        EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ATPSCharacter::OnStopSprint);
+        EnhancedInputComponent->BindAction(ChangeWeaponAction, ETriggerEvent::Started, WeaponComponent, &UTBSWeaponComponent::NextWeapon);
+        EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, WeaponComponent, &UTBSWeaponComponent::Reload);
+        EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &ATPSCharacter::StartCombat);
+        EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Completed, this, &ATPSCharacter::StopCombat);
+    }
+    //_________________________OLD INPUT SYSTEM_____________________________________________
+    //PlayerInputComponent->BindAxis("MoveForward", this, &ATPSCharacter::MoveForward);
+    //PlayerInputComponent->BindAxis("MoveRight", this, &ATPSCharacter::MoveRight);
+    //PlayerInputComponent->BindAxis("LookUp", this, &ATPSCharacter::AddControllerPitchInput);
+    //PlayerInputComponent->BindAxis("TurnAround", this, &ATPSCharacter::AddControllerYawInput);
+    //PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ATPSCharacter::Jump);
+    //PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ATPSCharacter::OnStartSprint);
+    //PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ATPSCharacter::OnStopSprint);
+    //PlayerInputComponent->BindAction("Shoot", IE_Pressed, WeaponComponent, &UTBSWeaponComponent::StartFire);
+    //PlayerInputComponent->BindAction("Shoot", IE_Released, WeaponComponent, &UTBSWeaponComponent::StopFire);
+    //PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &ATPSCharacter::StartCombat);
+    //PlayerInputComponent->BindAction("Shoot", IE_Released, this, &ATPSCharacter::StopCombat);
+    //PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, WeaponComponent, &UTBSWeaponComponent::NextWeapon);
+    //PlayerInputComponent->BindAction("Reload", IE_Pressed, WeaponComponent, &UTBSWeaponComponent::Reload);
+}
+
+//-------------------------------------------------MOVEMENT-----------------------------------------------
+
+void ATPSCharacter::Move(const FInputActionValue& Value)
+{
+    const FVector2D MovementVector = Value.Get<FVector2D>();
+    MoveForward(MovementVector.Y);
+    MoveRight(MovementVector.X);
 }
 
 void ATPSCharacter::SetSprinting()
 {
     if (!HeavyWeapon())
     {
-        // IsSprinting = WantsToRun && isMovingForward;
         IsSprinting = WantsToRun && isMovingForward && !GetVelocity().IsZero();
     }
     else
@@ -99,23 +132,9 @@ void ATPSCharacter::SetSprinting()
     }
 }
 
-bool ATPSCharacter::InCombat() const
-{
-    return IsFighting;
-}
-
 bool ATPSCharacter::HeavyWeapon() const
 {
     return WeaponComponent->GetEquipType();
-}
-
-void ATPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
-{
-    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
-    DOREPLIFETIME(ATPSCharacter, IsFighting);
-    DOREPLIFETIME(ATPSCharacter, WantsToRun);
-    DOREPLIFETIME(ATPSCharacter, isMovingForward);
-    DOREPLIFETIME(ATPSCharacter, IsSprinting);
 }
 
 void ATPSCharacter::MoveForward(float Amount)
@@ -141,17 +160,6 @@ void ATPSCharacter::MoveRight(float Amount)
 void ATPSCharacter::OnStartSprint()
 {
     StopCombat();
-    // if (!HeavyWeapon())
-    //{
-    //      WantsToRun = isMovingForward && !GetVelocity().IsZero();
-    //     WantsToRun = isMovingForward;
-    //     WantsToRun = true;
-    // }
-    // else
-    //{
-    //     WantsToRun = false;
-    // }
-
     WantsToRun = true;
     SetSprinting();
     if (HasAuthority())
@@ -177,6 +185,9 @@ void ATPSCharacter::OnStopSprint()
         ServerOnStopSprint();
     }
 }
+
+
+//-------------------------------------------------HEALTH-----------------------------------------------
 void ATPSCharacter::OnDeath()
 {
     UE_LOG(LogTemp, Warning, TEXT("Plater %s is dead"), *GetName());
@@ -203,22 +214,18 @@ void ATPSCharacter::OnHealthChanged(float Health)
     HealthTextComponent->SetText(FText::FromString(FString::Printf(TEXT("%.0f"), Health)));
 }
 
+
+//-------------------------------------------------COMBAT-----------------------------------------------
+
 void ATPSCharacter::StartCombat()
 {
-    // if (!IsSprinting())
-
-     if (!WantsToRun)
+    if (!WantsToRun)
     {
-         IsFighting = true;
-         WeaponComponent->StartFire();
-     }
+        IsFighting = true;
+        WeaponComponent->StartFire();
+    }
     if (HasAuthority())
     {
-        //if (!WantsToRun)
-        //{
-        //    IsFighting = true;
-        //    WeaponComponent->StartFire();
-        //}
         MulticastOnStartCombat();
     }
     else
@@ -230,12 +237,10 @@ void ATPSCharacter::StartCombat()
 
 void ATPSCharacter::StopCombat()
 {
-     IsFighting = false;
-     WeaponComponent->StopFire();
+    IsFighting = false;
+    WeaponComponent->StopFire();
     if (HasAuthority())
     {
-        //IsFighting = false;
-        //WeaponComponent->StopFire();
         MulticastOnStopCombat();
     }
     else
@@ -245,7 +250,17 @@ void ATPSCharacter::StopCombat()
     }
 }
 
-//______________________________Œ—“Œ–Œ∆ÕŒ! ƒ¿À‹ÿ≈ –≈œÀ» ¿÷»ﬂ!____________________________
+//______________________________OSTOROJNO! DALSHE REPLICATION!!____________________________
+
+void ATPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
+{
+    Super::GetLifetimeReplicatedProps(OutLifetimeProps);
+    DOREPLIFETIME(ATPSCharacter, IsFighting);
+    DOREPLIFETIME(ATPSCharacter, WantsToRun);
+    DOREPLIFETIME(ATPSCharacter, isMovingForward);
+    DOREPLIFETIME(ATPSCharacter, IsSprinting);
+}
+//________________________________________________
 // StartSprint
 void ATPSCharacter::ServerOnStartSprint_Implementation()
 {
@@ -256,16 +271,6 @@ void ATPSCharacter::MulticastOnStartSprint_Implementation()
     if (!IsLocallyControlled())
     {
         StopCombat();
-        // if (!HeavyWeapon())
-        //{
-        //      WantsToRun = isMovingForward && !GetVelocity().IsZero();
-        //     //WantsToRun = isMovingForward;
-        //     //WantsToRun = true;
-        // }
-        // else
-        //{
-        //     WantsToRun = false;
-        // }
         WantsToRun = true;
         SetSprinting();
     }
@@ -311,7 +316,6 @@ void ATPSCharacter::MulticastOnStopCombat_Implementation()
 {
     if (!IsLocallyControlled())
     {
-        UE_LOG(LogTemp, Warning, TEXT("BUM!"))
         IsFighting = false;
         WeaponComponent->StopFire();
     }
@@ -344,7 +348,6 @@ void ATPSCharacter::MulticastSetSprinting_Implementation()
         if (!HeavyWeapon())
         {
             IsSprinting = WantsToRun && isMovingForward && !GetVelocity().IsZero();
-            // IsSprinting = WantsToRun && isMovingForward;
         }
         else
         {

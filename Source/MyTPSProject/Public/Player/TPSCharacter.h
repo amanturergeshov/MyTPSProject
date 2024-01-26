@@ -4,17 +4,17 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "InputActionValue.h"
 #include "TPSCharacter.generated.h"
 
+
 class UTPSHealthComponent;
-
 class USpringArmComponent;
-
 class UCameraComponent;
-
 class UTextRenderComponent;
-
 class UTBSWeaponComponent;
+class UInputMappingContext;
+class UInputAction;
 
 UCLASS()
 class MYTPSPROJECT_API ATPSCharacter : public ACharacter
@@ -22,11 +22,10 @@ class MYTPSPROJECT_API ATPSCharacter : public ACharacter
     GENERATED_BODY()
 
 public:
-    // Sets default values for this character's properties
     ATPSCharacter(const FObjectInitializer& ObjInit);
 
 protected:
-    // Called when the game starts or when spawned
+    //-------------------------Components--------------------------
     UPROPERTY(VisibleAnywhere, BlueprintReadWrite, Category = "Components")
     UCameraComponent* CameraComponent;
 
@@ -45,31 +44,46 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* DeathAnimMontage;
 
-    // UPROPERTY(Replicated,VisibleAnywhere, BlueprintReadWrite)
-    // float Health = HealthComponent->GetHealth();
+    //-------------------------INPUTS--------------------------
+    UPROPERTY(EditAnywhere, Category = Input)
+    UInputMappingContext* SlashContext;
+
+    UPROPERTY(EditAnywhere, Category = Input)
+    UInputAction* MovementAction;
+
+    UPROPERTY(EditAnywhere, Category = Input)
+    UInputAction* JumpAction;
+
+    UPROPERTY(EditAnywhere, Category = Input)
+    UInputAction* SprintAction;
+
+    UPROPERTY(EditAnywhere, Category = Input)
+    UInputAction* ChangeWeaponAction;
+
+    UPROPERTY(EditAnywhere, Category = Input)
+    UInputAction* ReloadAction;
+    
+    UPROPERTY(EditAnywhere, Category = Input)
+    UInputAction* ShootAction;
+    //________________________________________________________
 
     virtual void BeginPlay() override;
 
 public:
-    virtual void Tick(float DeltaTime) override;
 
-    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
-
-    UFUNCTION(BlueprintCallable, Category = "Movement")
-    void SetSprinting();
-
-    //_______________________________________–≈œÀ» ¿÷»ﬂ________
+    //___________________________REPLICATION______________________
+    void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     // StartSprint
-    UFUNCTION(Server, Reliable)
+    UFUNCTION(Server, Unreliable)
     void ServerOnStartSprint();
-    UFUNCTION(NetMulticast, Reliable)
+    UFUNCTION(NetMulticast, Unreliable)
     void MulticastOnStartSprint();
 
     //______________________________________________________________
     // StopSprint
-    UFUNCTION(Server, Reliable)
+    UFUNCTION(Server, Unreliable)
     void ServerOnStopSprint();
-    UFUNCTION(NetMulticast, Reliable)
+    UFUNCTION(NetMulticast, Unreliable)
     void MulticastOnStopSprint();
     //_____________________________________________________________
     // StartCombat
@@ -87,28 +101,43 @@ public:
 
     //______________________________________________________________
     // MoveForward
-    UFUNCTION(Server, Reliable)
+    UFUNCTION(Server, Unreliable)
     void ServerMoveForward(float Amount);
-    UFUNCTION(NetMulticast, Reliable)
+    UFUNCTION(NetMulticast, Unreliable)
     void MulticastMoveForward(float Amount);
 
     //______________________________________________________________
     // MoveForward
-    UFUNCTION(Server, Reliable)
+    UFUNCTION(Server, Unreliable)
     void ServerSetSprinting();
-    UFUNCTION(NetMulticast, Reliable)
+    UFUNCTION(NetMulticast, Unreliable)
     void MulticastSetSprinting();
 
     //______________________________________________________________
 
     UFUNCTION(BlueprintCallable, Category = "Movement")
-    bool InCombat() const;
-
-    UFUNCTION(BlueprintCallable, Category = "Movement")
     bool HeavyWeapon() const;
+    UFUNCTION(BlueprintCallable, Category = "Movement")
+    void SetSprinting();
+    void Move(const FInputActionValue& Value);
+    virtual void Tick(float DeltaTime) override;
+    virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+private:
+    //_____________________
+    void MoveForward(float Amount);
+    void MoveRight(float Amount);
+    //_____________________
+    void OnStartSprint();
+    void OnStopSprint();
+    //_____________________
+    void OnDeath();
+    void OnHealthChanged(float);
+    //_____________________
+    void StartCombat();
+    void StopCombat();
 
-    void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
+public:
+    //_______________________PROPERTIES___________________
     UPROPERTY(Replicated, BlueprintReadWrite)
     bool IsFighting = false;
 
@@ -120,21 +149,4 @@ public:
 
     UPROPERTY(Replicated, BlueprintReadWrite)
     bool isMovingForward = false;
-
-private:
-    void MoveForward(float Amount);
-    void MoveRight(float Amount);
-
-    void OnStartSprint();
-    void OnStopSprint();
-
-    void OnDeath();
-
-    void OnHealthChanged(float);
-
-    UFUNCTION(BlueprintCallable)
-    void StartCombat();
-
-    UFUNCTION(BlueprintCallable)
-    void StopCombat();
 };
