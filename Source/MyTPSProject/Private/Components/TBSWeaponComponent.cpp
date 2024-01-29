@@ -5,17 +5,12 @@
 #include "GameFramework/Character.h"
 #include "Animations/TPSReloadAnimNotify.h"
 #include "Net/UnrealNetwork.h"
-// Sets default values for this component's properties
+
 UTBSWeaponComponent::UTBSWeaponComponent()
 {
-    // Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these
-    // features off to improve performance if you don't need them.
     PrimaryComponentTick.bCanEverTick = false;
-
-    // ...
 }
 
-// Called when the game starts
 void UTBSWeaponComponent::BeginPlay()
 {
     Super::BeginPlay();
@@ -52,7 +47,7 @@ void UTBSWeaponComponent::SpawnWeapons()
         auto Weapon = GetWorld()->SpawnActor<ATPSPistolWeapon>(OneWeaponData.WeaponClass);
         if (!Weapon)
             continue;
-        Weapon->OnClipEmpty.AddUObject(this, &UTBSWeaponComponent::OnEmptyClip);
+        Weapon->OnClipEmpty.AddUObject(this, &UTBSWeaponComponent::ChangeClip);
 
         Weapon->SetOwner(Character);
         Weapons.Add(Weapon);
@@ -143,14 +138,6 @@ void UTBSWeaponComponent::PlayAnimMontage(UAnimMontage* Animation)
     if (!Character)
         return;
     Character->PlayAnimMontage(Animation);
-    if (Character->HasAuthority())
-    {
-        MulticastPlayAnimation(Animation);
-    }
-    else
-    {
-        ServerPlayAnimation(Animation);
-    }
 }
 
 void UTBSWeaponComponent::OnReloadFinished(USkeletalMeshComponent* MeshComp)
@@ -171,10 +158,6 @@ bool UTBSWeaponComponent::CanReload() const
     return CurrentWeapon && !ReloadAnimInProgress && CurrentWeapon->CanReload();
 }
 
-void UTBSWeaponComponent::OnEmptyClip()
-{
-    ChangeClip();
-}
 
 void UTBSWeaponComponent::ChangeClip()
 {
@@ -185,14 +168,6 @@ void UTBSWeaponComponent::ChangeClip()
     CurrentWeapon->ChangeClip();
     ReloadAnimInProgress = true;
     PlayAnimMontage(CurrenReloadAnimMontage);
-    if (Character->HasAuthority())
-    {
-        MulticastChangeClip();
-    }
-    else
-    {
-        ServerChangeClip();
-    }
 }
 
 void UTBSWeaponComponent::StartFire()
@@ -222,11 +197,6 @@ bool UTBSWeaponComponent::GetEquipType()
     return CurrentWeapon->GetWeaponHeavy();
 }
 
-void UTBSWeaponComponent::Reload()
-{
-    ChangeClip();
-}
-
 int32 UTBSWeaponComponent::GetCurrentBullets()
 {
     if (!CurrentWeapon)
@@ -250,57 +220,4 @@ void UTBSWeaponComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 
     DOREPLIFETIME(UTBSWeaponComponent, CurrenReloadAnimMontage);
 }
-
-
-
-
-//Reload
-
-void UTBSWeaponComponent::ServerChangeClip_Implementation()
-{
-    MulticastChangeClip();
-}
-
-void UTBSWeaponComponent::MulticastChangeClip_Implementation() {
-    ACharacter* Character = Cast<ACharacter>(GetOwner());
-    if (Character->IsLocallyControlled())
-    {
-        return;
-    }
-    else
-    {
-        if (!CanReload())
-            return;
-        StopFire();
-        CurrentWeapon->ChangeClip();
-        ReloadAnimInProgress = true;
-        PlayAnimMontage(CurrenReloadAnimMontage);
-    }
-    
-}
-
-//__________________________________________________________________________________________________________________
-
-void UTBSWeaponComponent::ServerPlayAnimation_Implementation(UAnimMontage* Animation)
-{
-    MulticastPlayAnimation(Animation);
-}
-
-void UTBSWeaponComponent::MulticastPlayAnimation_Implementation(UAnimMontage* Animation)
-{
-    ACharacter* Character = Cast<ACharacter>(GetOwner());
-    if (Character->IsLocallyControlled())
-    {
-        return;
-    }
-    else
-    {
-        if (!Character)
-            return;
-        Character->PlayAnimMontage(Animation);
-    }
-}
-
-//_________________________________________________________________________________
-//Equip Animation
 
