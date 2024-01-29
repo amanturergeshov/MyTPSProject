@@ -26,25 +26,52 @@ class MYTPSPROJECT_API UTBSWeaponComponent : public UActorComponent
     GENERATED_BODY()
 
 public:
-    // Sets default values for this component's properties
     UTBSWeaponComponent();
-
+    //******************************************FUNCTIONS*********************************
     void StartFire();
     void StopFire();
     void NextWeapon();
-    bool GetEquipType();
-    void Reload();
+    void ChangeClip();
+    //__________________________________________GETINFO____________________________________
     UFUNCTION(BlueprintCallable)
     int32 GetCurrentBullets();
     UFUNCTION(BlueprintCallable)
     int32 GetCurrentClips();
-    
+    bool GetEquipType();
 
 protected:
-    // Called when the game starts
     virtual void BeginPlay() override;
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
+    //___________________________________REPLICATION_____________________
+    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
 
+    //_________________________________
+    // Reload
+    UFUNCTION(Server, Reliable)
+    void ServerChangeClip();
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastChangeClip();
+
+    //__________________________________________
+    // ReloadAnimation
+    UFUNCTION(Server, Reliable)
+    void ServerPlayAnimation(UAnimMontage* Animation);
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastPlayAnimation(UAnimMontage* Animation);
+    //__________________________________________
+private:
+    void SpawnWeapons();
+    void InitAnimations();
+    void AttachWeaponToSocket(ATPSPistolWeapon* Weapon, USceneComponent* SceneComponent, const FName& SocketName);
+    void EquipWeapon(int32 WeaponIndex);
+    void PlayAnimMontage(UAnimMontage* Animation);
+    void OnReloadFinished(USkeletalMeshComponent* MeshComp);
+    //__________________________________________GETINFO____________________________________
+    bool CanFire() const;
+    bool CanReload() const;
+
+protected:
+    //******************************************PROPERTIES***********************************
     UPROPERTY(EditDefaultsOnly, Category = "Weapon")
     TArray<FWeaponData> WeaponData;
 
@@ -63,25 +90,6 @@ protected:
     UPROPERTY(EditDefaultsOnly, Category = "Animation")
     UAnimMontage* HeavyEquipAnimMontage;
 
-    //___________________________________–≈œÀ» ¿÷»ﬂ_____________________
-    virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
-    //_________________________________
-    //Reload
-    UFUNCTION(Server,Reliable)
-    void ServerChangeClip();
-    UFUNCTION(NetMulticast, Reliable)
-    void MulticastChangeClip();
-    
-    //__________________________________________
-    //ReloadAnimation
-    UFUNCTION(Server, Reliable)
-    void ServerPlayAnimation(UAnimMontage* Animation);
-    UFUNCTION(NetMulticast, Reliable)
-    void MulticastPlayAnimation(UAnimMontage* Animation);
-    //__________________________________________
-
-
 
 private:
     UPROPERTY()
@@ -95,24 +103,7 @@ private:
 
     int32 CurrentWeaponIndex = 0;
 
-    void SpawnWeapons();
-
-    void InitAnimations();
-
-    void AttachWeaponToSocket(ATPSPistolWeapon* Weapon, USceneComponent* SceneComponent, const FName& SocketName);
-
-    void EquipWeapon(int32 WeaponIndex);
-
-    void PlayAnimMontage(UAnimMontage* Animation);
-
     bool ReloadAnimInProgress = false;
-    void OnReloadFinished(USkeletalMeshComponent* MeshComp);
-
-    bool CanFire() const;
-    bool CanReload() const;
-
-    void OnEmptyClip();
-    void ChangeClip();
 
     template <typename T> T* FindNotifyByClass(UAnimSequenceBase* Animation)
     {

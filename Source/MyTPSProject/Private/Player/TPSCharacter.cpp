@@ -83,7 +83,7 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
         EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Started, this, &ATPSCharacter::OnStartSprint);
         EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ATPSCharacter::OnStopSprint);
         EnhancedInputComponent->BindAction(ChangeWeaponAction, ETriggerEvent::Started, WeaponComponent, &UTBSWeaponComponent::NextWeapon);
-        EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, WeaponComponent, &UTBSWeaponComponent::Reload);
+        EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, WeaponComponent, &UTBSWeaponComponent::ChangeClip);
         EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &ATPSCharacter::StartCombat);
         EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Completed, this, &ATPSCharacter::StopCombat);
     }

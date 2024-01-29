@@ -5,17 +5,12 @@
 #include "GameFramework/Character.h"
 #include "Animations/TPSReloadAnimNotify.h"
 #include "Net/UnrealNetwork.h"
-// Sets default values for this component's properties
 UTBSWeaponComponent::UTBSWeaponComponent()
 {
-    // Set this component to be initialized when the game starts, and to be ticked every frame.  You can turn these
-    // features off to improve performance if you don't need them.
     PrimaryComponentTick.bCanEverTick = false;
 
-    // ...
 }
 
-// Called when the game starts
 void UTBSWeaponComponent::BeginPlay()
 {
     Super::BeginPlay();
@@ -38,7 +33,7 @@ void UTBSWeaponComponent::EndPlay(const EEndPlayReason::Type EndPlayReason)
     Super::EndPlay(EndPlayReason);
 }
 
-
+//_________________________________________________WEAPON_______________________________________________________
 void UTBSWeaponComponent::SpawnWeapons()
 {
 
@@ -52,7 +47,7 @@ void UTBSWeaponComponent::SpawnWeapons()
         auto Weapon = GetWorld()->SpawnActor<ATPSPistolWeapon>(OneWeaponData.WeaponClass);
         if (!Weapon)
             continue;
-        Weapon->OnClipEmpty.AddUObject(this, &UTBSWeaponComponent::OnEmptyClip);
+        Weapon->OnClipEmpty.AddUObject(this, &UTBSWeaponComponent::ChangeClip);
 
         Weapon->SetOwner(Character);
         Weapons.Add(Weapon);
@@ -69,19 +64,6 @@ void UTBSWeaponComponent::SpawnWeapons()
     }
 }
 
-void UTBSWeaponComponent::InitAnimations()
-{
-
-    for (auto OneWeaponData : WeaponData)
-    {
-        auto ReloadFinishedNotify = FindNotifyByClass<UTPSReloadAnimNotify>(OneWeaponData.ReloadAnimMontage);
-        if (!ReloadFinishedNotify)
-            continue;
-
-        ReloadFinishedNotify->OnNotified.AddUObject(this, &UTBSWeaponComponent::OnReloadFinished);
-    }
-}
-
 void UTBSWeaponComponent::AttachWeaponToSocket(
     ATPSPistolWeapon* Weapon, USceneComponent* SceneComponent, const FName& SocketName)
 {
@@ -89,6 +71,12 @@ void UTBSWeaponComponent::AttachWeaponToSocket(
         return;
     FAttachmentTransformRules AttachmentRules(EAttachmentRule::SnapToTarget, false);
     Weapon->AttachToComponent(SceneComponent, AttachmentRules, SocketName);
+}
+
+void UTBSWeaponComponent::NextWeapon()
+{
+    CurrentWeaponIndex = (CurrentWeaponIndex + 1) % Weapons.Num();
+    EquipWeapon(CurrentWeaponIndex);
 }
 
 void UTBSWeaponComponent::EquipWeapon(int32 WeaponIndex)
@@ -137,22 +125,8 @@ void UTBSWeaponComponent::EquipWeapon(int32 WeaponIndex)
     }
 }
 
-void UTBSWeaponComponent::PlayAnimMontage(UAnimMontage* Animation)
-{
-    ACharacter* Character = Cast<ACharacter>(GetOwner());
-    if (!Character)
-        return;
-    Character->PlayAnimMontage(Animation);
-    if (Character->HasAuthority())
-    {
-        MulticastPlayAnimation(Animation);
-    }
-    else
-    {
-        ServerPlayAnimation(Animation);
-    }
-}
 
+//_________________________________________________RELOAD_______________________________________________________
 void UTBSWeaponComponent::OnReloadFinished(USkeletalMeshComponent* MeshComp)
 {
     ACharacter* Character = Cast<ACharacter>(GetOwner());
@@ -161,20 +135,6 @@ void UTBSWeaponComponent::OnReloadFinished(USkeletalMeshComponent* MeshComp)
     ReloadAnimInProgress = false;
 }
 
-bool UTBSWeaponComponent::CanFire() const
-{
-    return CurrentWeapon && !ReloadAnimInProgress;
-}
-
-bool UTBSWeaponComponent::CanReload() const
-{
-    return CurrentWeapon && !ReloadAnimInProgress && CurrentWeapon->CanReload();
-}
-
-void UTBSWeaponComponent::OnEmptyClip()
-{
-    ChangeClip();
-}
 
 void UTBSWeaponComponent::ChangeClip()
 {
@@ -194,7 +154,37 @@ void UTBSWeaponComponent::ChangeClip()
         ServerChangeClip();
     }
 }
+//_________________________________________________ANIMATION_______________________________________________________
+void UTBSWeaponComponent::PlayAnimMontage(UAnimMontage* Animation)
+{
+    ACharacter* Character = Cast<ACharacter>(GetOwner());
+    if (!Character)
+        return;
+    Character->PlayAnimMontage(Animation);
+    if (Character->HasAuthority())
+    {
+        MulticastPlayAnimation(Animation);
+    }
+    else
+    {
+        ServerPlayAnimation(Animation);
+    }
+}
+void UTBSWeaponComponent::InitAnimations()
+{
 
+    for (auto OneWeaponData : WeaponData)
+    {
+        auto ReloadFinishedNotify = FindNotifyByClass<UTPSReloadAnimNotify>(OneWeaponData.ReloadAnimMontage);
+        if (!ReloadFinishedNotify)
+            continue;
+
+        ReloadFinishedNotify->OnNotified.AddUObject(this, &UTBSWeaponComponent::OnReloadFinished);
+    }
+}
+
+
+//_________________________________________________COMBAT_______________________________________________________
 void UTBSWeaponComponent::StartFire()
 {
     if (!CanFire())
@@ -209,22 +199,21 @@ void UTBSWeaponComponent::StopFire()
     CurrentWeapon->StopFire();
 }
 
-void UTBSWeaponComponent::NextWeapon()
+//_________________________________________________WEAPON INFO_______________________________________________________
+bool UTBSWeaponComponent::CanFire() const
 {
-    CurrentWeaponIndex = (CurrentWeaponIndex + 1) % Weapons.Num();
-    EquipWeapon(CurrentWeaponIndex);
+    return CurrentWeapon && !ReloadAnimInProgress;
 }
 
+bool UTBSWeaponComponent::CanReload() const
+{
+    return CurrentWeapon && !ReloadAnimInProgress && CurrentWeapon->CanReload();
+}
 bool UTBSWeaponComponent::GetEquipType()
 {
     if (!CurrentWeapon)
         return false;
     return CurrentWeapon->GetWeaponHeavy();
-}
-
-void UTBSWeaponComponent::Reload()
-{
-    ChangeClip();
 }
 
 int32 UTBSWeaponComponent::GetCurrentBullets()
@@ -241,7 +230,7 @@ int32 UTBSWeaponComponent::GetCurrentClips()
     return CurrentWeapon->GetClips();
 }
 
-//_____________________________________–≈œÀ» ¿÷»ﬂ!__________________________________
+//_____________________________________REPLICATION!__________________________________
 
 
 void UTBSWeaponComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const 
