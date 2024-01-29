@@ -135,8 +135,6 @@ private:
     //_____________________
     void StartCombat();
     void StopCombat();
-    //_______________________
-    void Reload();
 
 public:
     //_______________________PROPERTIES___________________
