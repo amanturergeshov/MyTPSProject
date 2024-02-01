@@ -75,16 +75,11 @@ public:
     void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     // StartSprint
     UFUNCTION(Server, Unreliable)
-    void ServerOnStartSprint();
-    UFUNCTION(NetMulticast, Unreliable)
-    void MulticastOnStartSprint();
-
+    void OnStartSprint();
     //______________________________________________________________
     // StopSprint
     UFUNCTION(Server, Unreliable)
-    void ServerOnStopSprint();
-    UFUNCTION(NetMulticast, Unreliable)
-    void MulticastOnStopSprint();
+    void OnStopSprint();
     //_____________________________________________________________
     // StartCombat
     UFUNCTION(Server, Reliable)
@@ -103,16 +98,12 @@ public:
     // MoveForward
     UFUNCTION(Server, Unreliable)
     void ServerMoveForward(float Amount);
-    UFUNCTION(NetMulticast, Unreliable)
-    void MulticastMoveForward(float Amount);
-
     //______________________________________________________________
-    // MoveForward
-    UFUNCTION(Server, Unreliable)
-    void ServerSetSprinting();
-    UFUNCTION(NetMulticast, Unreliable)
-    void MulticastSetSprinting();
-
+    //NextWeapon
+    UFUNCTION(Server, Reliable)
+    void ServerNextWeapon();
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastNextWeapon();
     //______________________________________________________________
 
     UFUNCTION(BlueprintCallable, Category = "Movement")
@@ -123,19 +114,21 @@ public:
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
 private:
-    //_____________________
-    void MoveForward(float Amount);
+
+    //_____________________MOVEMENT_________
     void MoveRight(float Amount);
-    //_____________________
-    void OnStartSprint();
-    void OnStopSprint();
-    //_____________________
+    void MoveForward(float Amount);
+
+    //_____________________HEALTH__________
     void OnDeath();
     void OnHealthChanged(float);
-    //_____________________
+
+    //_____________________COMBAT______________
     void StartCombat();
     void StopCombat();
-
+    //_____________________NEXTWEAPON____________
+    void NextWeapon();
+    //___________________________________________
 public:
     //_______________________PROPERTIES___________________
     UPROPERTY(Replicated, BlueprintReadWrite)
@@ -143,9 +136,6 @@ public:
 
     UPROPERTY(Replicated, BlueprintReadWrite)
     bool WantsToRun = false;
-
-    UPROPERTY(Replicated, BlueprintReadWrite)
-    bool IsSprinting = false;
 
     UPROPERTY(Replicated, BlueprintReadWrite)
     bool isMovingForward = false;

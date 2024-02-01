@@ -9,7 +9,7 @@ float UTPSCharacterMovementComponent::GetMaxSpeed() const
     const float MaxSpeed = Super::GetMaxSpeed();
     const ATPSCharacter* Player = Cast<ATPSCharacter>(GetPawnOwner());
 
-    return Player && Player->IsSprinting ? MaxSpeed + Modifier : MaxSpeed;
+    return Player && Player->WantsToRun ? MaxSpeed + Modifier : MaxSpeed;
 }
 void UTPSCharacterMovementComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
