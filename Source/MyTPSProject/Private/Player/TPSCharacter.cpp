@@ -126,7 +126,6 @@ void ATPSCharacter::MoveForward(float Amount)
 
 void ATPSCharacter::MoveRight(float Amount)
 {
-    SetSprinting();
     AddMovementInput(GetActorRightVector(), Amount);
 }
 

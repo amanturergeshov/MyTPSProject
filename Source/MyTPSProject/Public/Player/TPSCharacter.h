@@ -108,8 +108,6 @@ public:
 
     UFUNCTION(BlueprintCallable, Category = "Movement")
     bool HeavyWeapon() const;
-    UFUNCTION(BlueprintCallable, Category = "Movement")
-    void SetSprinting();
     void Move(const FInputActionValue& Value);
     virtual void Tick(float DeltaTime) override;
     virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
