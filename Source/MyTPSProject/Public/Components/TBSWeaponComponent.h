@@ -44,7 +44,7 @@ protected:
     virtual void EndPlay(const EEndPlayReason::Type EndPlayReason) override;
     //___________________________________REPLICATION_____________________
     virtual void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
-
+    //_____________________________________RPCs____________________________
     //_________________________________
     // Reload
     UFUNCTION(Server, Reliable)
@@ -60,12 +60,14 @@ protected:
     void MulticastPlayAnimation(UAnimMontage* Animation);
     //__________________________________________
 private:
+    //_____________________________________Weapon___________________________
     void SpawnWeapons();
-    void InitAnimations();
     void AttachWeaponToSocket(ATPSPistolWeapon* Weapon, USceneComponent* SceneComponent, const FName& SocketName);
     void EquipWeapon(int32 WeaponIndex);
-    void PlayAnimMontage(UAnimMontage* Animation);
     void OnReloadFinished(USkeletalMeshComponent* MeshComp);
+    //_______________________________________Animations____________________
+    void InitAnimations();
+    void PlayAnimMontage(UAnimMontage* Animation);
     //__________________________________________GETINFO____________________________________
     bool CanFire() const;
     bool CanReload() const;

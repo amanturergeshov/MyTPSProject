@@ -241,8 +241,7 @@ void UTBSWeaponComponent::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& 
 }
 
 
-
-
+//_____________________________________RPCs__________________________________
 //Reload
 
 void UTBSWeaponComponent::ServerChangeClip_Implementation()
@@ -289,7 +288,3 @@ void UTBSWeaponComponent::MulticastPlayAnimation_Implementation(UAnimMontage* An
         Character->PlayAnimMontage(Animation);
     }
 }
-
-//_________________________________________________________________________________
-//Equip Animation
-
