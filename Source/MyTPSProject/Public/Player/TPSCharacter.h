@@ -71,7 +71,7 @@ protected:
 
 public:
 
-    //___________________________REPLICATION______________________
+    //___________________________RPCs______________________
     void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const override;
     // StartSprint
     UFUNCTION(Server, Unreliable)

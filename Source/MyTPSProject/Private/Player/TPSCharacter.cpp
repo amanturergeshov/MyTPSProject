@@ -129,21 +129,6 @@ void ATPSCharacter::MoveRight(float Amount)
     AddMovementInput(GetActorRightVector(), Amount);
 }
 
-void ATPSCharacter::OnStartSprint_Implementation()
-{
-    StopCombat();
-    if (!HeavyWeapon())
-    {
-        WantsToRun = isMovingForward && !GetVelocity().IsZero();
-    }
-
-}
-
-void ATPSCharacter::OnStopSprint_Implementation()
-{
-    WantsToRun = false;
-
-}
 
 
 //-------------------------------------------------HEALTH-----------------------------------------------
@@ -227,7 +212,7 @@ void ATPSCharacter::NextWeapon()
     }
 }
 
-//______________________________OSTOROJNO! DALSHE REPLICATION!!____________________________
+//______________________________OSTOROJNO! DALSHE RPCs!!____________________________
 
 void ATPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
@@ -237,7 +222,20 @@ void ATPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
     DOREPLIFETIME(ATPSCharacter, isMovingForward);
 }
 //________________________________________________
+//Sprint
+void ATPSCharacter::OnStartSprint_Implementation()
+{
+    StopCombat();
+    if (!HeavyWeapon())
+    {
+        WantsToRun = isMovingForward && !GetVelocity().IsZero();
+    }
+}
 
+void ATPSCharacter::OnStopSprint_Implementation()
+{
+    WantsToRun = false;
+}
 //_________________________________________________
 // StartCombat
 void ATPSCharacter::ServerOnStartCombat_Implementation()
@@ -288,7 +286,7 @@ void ATPSCharacter::ServerNextWeapon_Implementation()
 
 void ATPSCharacter::MulticastNextWeapon_Implementation() 
 {
-    if (IsLocallyControlled())
+    if (!IsLocallyControlled())
     {
         if (WeaponComponent)
         {
