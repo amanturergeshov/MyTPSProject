@@ -35,6 +35,14 @@ void ATPSPistolWeapon::StopFire() {}
 
 void ATPSPistolWeapon::MakeShot() {}
 
+void ATPSPistolWeapon::MakeDamage(const FHitResult& HitResult)
+{
+    const auto DamagedActor = HitResult.GetActor();
+    if (!DamagedActor)
+        return;
+    DamagedActor->TakeDamage(DamageAmount, FDamageEvent(), GetPlayerController(), this);
+}
+
 void ATPSPistolWeapon::MakeHit(FHitResult& HitResult, const FVector& TraceStart, const FVector& TraceEnd)
 {
     if (!GetWorld())
@@ -45,13 +53,6 @@ void ATPSPistolWeapon::MakeHit(FHitResult& HitResult, const FVector& TraceStart,
         HitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParams);
 }
 
-void ATPSPistolWeapon::MakeDamage(const FHitResult& HitResult)
-{
-    const auto DamagedActor = HitResult.GetActor();
-    if (!DamagedActor)
-        return;
-    DamagedActor->TakeDamage(DamageAmount, FDamageEvent(), GetPlayerController(), this);
-}
 
 //__________________________________________GET INFO___________________________________________
 bool ATPSPistolWeapon::GetWeaponHeavy()
@@ -86,7 +87,8 @@ bool ATPSPistolWeapon::GetTraceData(FVector& TraceStart, FVector& TraceEnd) cons
     if (!GetPlayerViewPoint(ViewLocation, ViewRotation))
         return false;
     TraceStart = ViewLocation;
-    const FVector ShootDirection = ViewRotation.Vector();
+    const auto HalfRad = FMath::DegreesToRadians(BulletSpread);
+    const FVector ShootDirection = FMath::VRandCone(ViewRotation.Vector(), HalfRad);
     TraceEnd = TraceStart + ShootDirection * TraceMaxDistance;
     return true;
 }

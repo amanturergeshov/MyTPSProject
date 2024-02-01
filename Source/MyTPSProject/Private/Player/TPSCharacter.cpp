@@ -292,6 +292,5 @@ void ATPSCharacter::MulticastNextWeapon_Implementation()
         {
             WeaponComponent->NextWeapon();
         }
-
     }
 }

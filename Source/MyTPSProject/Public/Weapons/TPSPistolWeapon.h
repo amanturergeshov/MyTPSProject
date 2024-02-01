@@ -61,13 +61,13 @@ protected:
     bool IsClipEmpty() const;
     //_______________SHOT______________
     virtual void MakeShot();
-    void MakeHit(FHitResult& HitResult, const FVector& TraceStart, const FVector& TraceEnd);
     void MakeDamage(const FHitResult& HitResult);
+    void MakeHit(FHitResult& HitResult, const FVector& TraceStart, const FVector& TraceEnd);
     //_________GET INFO FOR SHOT_______
     APlayerController* GetPlayerController() const;
     bool GetPlayerViewPoint(FVector& ViewLocation, FRotator& ViewRotation) const;
     FVector GetMuzzleWorldLocation() const;
-    virtual bool GetTraceData(FVector& TraceStart, FVector& TraceEnd) const;
+    bool GetTraceData(FVector& TraceStart, FVector& TraceEnd) const;
 
 public:
     //_______________________________________PROPERTIES________________________________
@@ -80,19 +80,22 @@ protected:
     UPROPERTY(VisibleAnyWhere, BlueprintReadWrite, Category = "Components")
     UStaticMeshComponent* WeaponMesh;
 
-    UPROPERTY(VisibleAnyWhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnyWhere, BlueprintReadWrite, Category = "Weapon")
     FName MuzzleSocketName = "MuzzleSocket";
 
-    UPROPERTY(VisibleAnyWhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnyWhere, BlueprintReadWrite, Category = "Weapon")
     float TraceMaxDistance = 15000.0f;
 
-    UPROPERTY(VisibleAnyWhere, BlueprintReadWrite)
+    UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "Weapon")
+    float BulletSpread = 0.0f;
+
+    UPROPERTY(EditAnyWhere, BlueprintReadWrite, Category = "Weapon")
     float DamageAmount = 10.0f;
 
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
     FAmmoData DefaultAmmo{6, 6, false};
 
-    UPROPERTY(VisibleAnyWhere, BlueprintReadWrite)
+    UPROPERTY(VisibleAnyWhere, BlueprintReadWrite, Category = "Weapon")
     FAmmoData CurrentAmmo;
 };
 

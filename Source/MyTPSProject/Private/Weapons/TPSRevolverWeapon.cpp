@@ -41,16 +41,3 @@ void ATPSRevolverWeapon::MakeShot()
 
     DecreaseAmmo();
 }
-
-bool ATPSRevolverWeapon::GetTraceData(FVector& TraceStart, FVector& TraceEnd) const
-{
-    FVector ViewLocation;
-    FRotator ViewRotation;
-    if (!GetPlayerViewPoint(ViewLocation, ViewRotation))
-        return false;
-    TraceStart = ViewLocation;
-    const auto HalfRad = FMath::DegreesToRadians(BulletSpread);
-    const FVector ShootDirection = FMath::VRandCone(ViewRotation.Vector(), HalfRad);
-    TraceEnd = TraceStart + ShootDirection * TraceMaxDistance;
-    return true;
-}
