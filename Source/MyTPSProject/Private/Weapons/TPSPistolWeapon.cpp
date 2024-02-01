@@ -28,17 +28,37 @@ void ATPSPistolWeapon::BeginPlay()
     check(WeaponMesh);
     CurrentAmmo = DefaultAmmo;
 }
-
+//__________________________________________COMBAT___________________________________________
 void ATPSPistolWeapon::StartFire() {}
 
 void ATPSPistolWeapon::StopFire() {}
 
+void ATPSPistolWeapon::MakeShot() {}
+
+void ATPSPistolWeapon::MakeHit(FHitResult& HitResult, const FVector& TraceStart, const FVector& TraceEnd)
+{
+    if (!GetWorld())
+        return;
+    FCollisionQueryParams CollisionParams;
+    CollisionParams.AddIgnoredActor(GetOwner());
+    GetWorld()->LineTraceSingleByChannel(
+        HitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParams);
+}
+
+void ATPSPistolWeapon::MakeDamage(const FHitResult& HitResult)
+{
+    const auto DamagedActor = HitResult.GetActor();
+    if (!DamagedActor)
+        return;
+    DamagedActor->TakeDamage(DamageAmount, FDamageEvent(), GetPlayerController(), this);
+}
+
+//__________________________________________GET INFO___________________________________________
 bool ATPSPistolWeapon::GetWeaponHeavy()
 {
     return HeavyWeapon;
 }
 
-void ATPSPistolWeapon::MakeShot() {}
 
 APlayerController* ATPSPistolWeapon::GetPlayerController() const
 {
@@ -76,43 +96,16 @@ FVector ATPSPistolWeapon::GetMuzzleWorldLocation() const
     return WeaponMesh->GetSocketLocation(MuzzleSocketName);
 }
 
-void ATPSPistolWeapon::MakeHit(FHitResult& HitResult, const FVector& TraceStart, const FVector& TraceEnd)
-{
-    if (!GetWorld())
-        return;
-    FCollisionQueryParams CollisionParams;
-    CollisionParams.AddIgnoredActor(GetOwner());
-    GetWorld()->LineTraceSingleByChannel(
-        HitResult, TraceStart, TraceEnd, ECollisionChannel::ECC_Visibility, CollisionParams);
-}
-
-void ATPSPistolWeapon::MakeDamage(const FHitResult& HitResult)
-{
-    const auto DamagedActor = HitResult.GetActor();
-    if (!DamagedActor)
-        return;
-    DamagedActor->TakeDamage(DamageAmount, FDamageEvent(), GetPlayerController(), this);
-}
+//_______________________________________FOR RELOAD___________________________________________
 
 void ATPSPistolWeapon::DecreaseAmmo()
 {
 
     CurrentAmmo.Bullets--;
-    LogAmmo();
     if (IsClipEmpty() && !IsAmmoEmpty())
     {
         OnClipEmpty.Broadcast();
     }
-}
-
-bool ATPSPistolWeapon::IsAmmoEmpty() const
-{
-    return !CurrentAmmo.Infinite && CurrentAmmo.Clips == 0 && IsClipEmpty();
-}
-
-bool ATPSPistolWeapon::IsClipEmpty() const
-{
-    return CurrentAmmo.Bullets == 0;
 }
 
 void ATPSPistolWeapon::ChangeClip()
@@ -125,6 +118,18 @@ void ATPSPistolWeapon::ChangeClip()
     }
     CurrentAmmo.Bullets = DefaultAmmo.Bullets;
     UE_LOG(LogTemp, Error, TEXT("RELOAD!"));
+}
+
+//______________________________________GET INFO ABOUT AMMO_________________________________
+
+bool ATPSPistolWeapon::IsAmmoEmpty() const
+{
+    return !CurrentAmmo.Infinite && CurrentAmmo.Clips == 0 && IsClipEmpty();
+}
+
+bool ATPSPistolWeapon::IsClipEmpty() const
+{
+    return CurrentAmmo.Bullets == 0;
 }
 
 bool ATPSPistolWeapon::CanReload() const
@@ -142,15 +147,9 @@ int32 ATPSPistolWeapon::GetClips()
     return CurrentAmmo.Clips;
 }
 
+//______________________________________REPLICATION___________________________________________
 void ATPSPistolWeapon::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const
 {
     Super::GetLifetimeReplicatedProps(OutLifetimeProps);
     DOREPLIFETIME(ATPSPistolWeapon, HeavyWeapon)
-}
-
-void ATPSPistolWeapon::LogAmmo()
-{
-    FString AmmoInfo = "Ammo: " + FString::FromInt(CurrentAmmo.Bullets) + "/";
-    AmmoInfo += FString::FromInt(CurrentAmmo.Clips);
-    UE_LOG(LogTemp, Warning, TEXT("%s"), *AmmoInfo);
 }

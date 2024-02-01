@@ -33,29 +33,50 @@ class MYTPSPROJECT_API ATPSPistolWeapon : public AActor
     GENERATED_BODY()
 
 public:
-    // Sets default values for this actor's properties
+    //________________________________FUNCTIONS______________________
     ATPSPistolWeapon();
-    UFUNCTION(BlueprintCallable, Category = "Movement")
+    //_______________COMBAT____________
     virtual void StartFire();
     virtual void StopFire();
-    bool GetWeaponHeavy();
-    FOnClipEmptySignature OnClipEmpty;
-    UPROPERTY(Replicated,EditDefaultsOnly, Category = "Weapon")
-    bool HeavyWeapon=true;
-
-    
+    //_______________RELOAD____________
     void ChangeClip();
-
     bool CanReload() const;
-
+    //_______________GETINFO____________
+    bool GetWeaponHeavy();
     int32 GetBullets();
     int32 GetClips();
+    //_______________REPLICATION_______
     void GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLifetimeProps) const;
+
+    
 
 protected:
     /*  UPROPERTY(VisibleAnyWhere, BlueprintReadWrite, Category = "Components")
       USkeletalMeshComponent* WeaponMesh;*/
 
+    virtual void BeginPlay() override;
+    //_______________AMMO______________
+    void DecreaseAmmo();
+    bool IsAmmoEmpty() const;
+    bool IsClipEmpty() const;
+    //_______________SHOT______________
+    virtual void MakeShot();
+    void MakeHit(FHitResult& HitResult, const FVector& TraceStart, const FVector& TraceEnd);
+    void MakeDamage(const FHitResult& HitResult);
+    //_________GET INFO FOR SHOT_______
+    APlayerController* GetPlayerController() const;
+    bool GetPlayerViewPoint(FVector& ViewLocation, FRotator& ViewRotation) const;
+    FVector GetMuzzleWorldLocation() const;
+    virtual bool GetTraceData(FVector& TraceStart, FVector& TraceEnd) const;
+
+public:
+    //_______________________________________PROPERTIES________________________________
+    FOnClipEmptySignature OnClipEmpty;
+
+    UPROPERTY(Replicated, EditDefaultsOnly, Category = "Weapon")
+    bool HeavyWeapon = true;
+
+protected:
     UPROPERTY(VisibleAnyWhere, BlueprintReadWrite, Category = "Components")
     UStaticMeshComponent* WeaponMesh;
 
@@ -68,33 +89,10 @@ protected:
     UPROPERTY(VisibleAnyWhere, BlueprintReadWrite)
     float DamageAmount = 10.0f;
 
-    
     UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = "Weapon")
     FAmmoData DefaultAmmo{6, 6, false};
 
-    
     UPROPERTY(VisibleAnyWhere, BlueprintReadWrite)
     FAmmoData CurrentAmmo;
-
-    virtual void BeginPlay() override;
-
-
-    virtual void MakeShot();
-
-    APlayerController* GetPlayerController() const;
-
-    bool GetPlayerViewPoint(FVector& ViewLocation, FRotator& ViewRotation) const;
-
-    FVector GetMuzzleWorldLocation() const;
-
-    virtual bool GetTraceData(FVector& TraceStart, FVector& TraceEnd) const;
-
-    void MakeHit(FHitResult& HitResult, const FVector& TraceStart, const FVector& TraceEnd);
-    void MakeDamage(const FHitResult& HitResult);
-
-    void DecreaseAmmo();
-    bool IsAmmoEmpty() const;
-    bool IsClipEmpty() const;
-    void LogAmmo();
-
 };
+
