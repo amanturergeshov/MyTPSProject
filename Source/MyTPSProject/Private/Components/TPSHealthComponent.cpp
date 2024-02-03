@@ -49,6 +49,7 @@ void UTPSHealthComponent::OnTakeAnyDamage(
     OnHealthChanged.Broadcast(Health);
     if (IsDead())
     {
+        OnDeathForScore.Broadcast(DamageCauser->GetOwner());
         OnDeath.Broadcast();
     }
 }

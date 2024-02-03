@@ -6,8 +6,9 @@
 #include "Components/ActorComponent.h"
 #include "TPSHealthComponent.generated.h"
 
-DECLARE_MULTICAST_DELEGATE(FOnDeath)
-DECLARE_MULTICAST_DELEGATE_OneParam(FOnHealthChanged, float)
+DECLARE_DYNAMIC_MULTICAST_DELEGATE_OneParam(FOnDeathForScore, AActor*, DamageCauser);
+DECLARE_MULTICAST_DELEGATE(FOnDeath);
+DECLARE_MULTICAST_DELEGATE_OneParam(FOnHealthChanged, float);
 
 
 UCLASS(ClassGroup = (Custom), meta = (BlueprintSpawnableComponent))
@@ -24,6 +25,9 @@ public:
 
     UFUNCTION(BlueprintCallable)
     float GetHealth() const { return Health; }
+
+    UPROPERTY(BlueprintAssignable)
+    FOnDeathForScore OnDeathForScore;
 
     FOnDeath OnDeath;
 
