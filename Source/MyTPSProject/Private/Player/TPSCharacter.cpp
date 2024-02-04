@@ -161,37 +161,19 @@ void ATPSCharacter::OnHealthChanged(float Health)
 
 //-------------------------------------------------COMBAT-----------------------------------------------
 
-void ATPSCharacter::StartCombat()
+void ATPSCharacter::StartCombat_Implementation()
 {
     if (!WantsToRun)
     {
         IsFighting = true;
         WeaponComponent->StartFire();
     }
-    if (HasAuthority())
-    {
-        MulticastOnStartCombat();
-    }
-    else
-    {
-
-        ServerOnStartCombat();
-    }
 }
 
-void ATPSCharacter::StopCombat()
+void ATPSCharacter::StopCombat_Implementation()
 {
     IsFighting = false;
     WeaponComponent->StopFire();
-    if (HasAuthority())
-    {
-        MulticastOnStopCombat();
-    }
-    else
-    {
-
-        ServerOnStopCombat();
-    }
 }
 //_________________________________NEXT WEAPON____________________________________
 
@@ -235,37 +217,6 @@ void ATPSCharacter::OnStartSprint_Implementation()
 void ATPSCharacter::OnStopSprint_Implementation()
 {
     WantsToRun = false;
-}
-//_________________________________________________
-// StartCombat
-void ATPSCharacter::ServerOnStartCombat_Implementation()
-{
-    MulticastOnStartCombat();
-}
-void ATPSCharacter::MulticastOnStartCombat_Implementation()
-{
-    if (!IsLocallyControlled())
-    {
-        if (!WantsToRun)
-        {
-            IsFighting = true;
-            WeaponComponent->StartFire();
-        }
-    }
-}
-//_______________________________________________________
-// StopCombat
-void ATPSCharacter::ServerOnStopCombat_Implementation()
-{
-    MulticastOnStopCombat();
-}
-void ATPSCharacter::MulticastOnStopCombat_Implementation()
-{
-    if (!IsLocallyControlled())
-    {
-        IsFighting = false;
-        WeaponComponent->StopFire();
-    }
 }
 //_____________________________________________________
 //MoveForward
