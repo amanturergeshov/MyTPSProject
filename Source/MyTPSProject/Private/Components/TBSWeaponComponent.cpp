@@ -53,12 +53,12 @@ void UTBSWeaponComponent::SpawnWeapons()
         Weapons.Add(Weapon);
         if (Weapon->GetWeaponHeavy())
         {
-            AttachWeaponToSocket(CurrentWeapon, Character->GetMesh(), HeavyWeaponArmorySocketName);
+            AttachWeaponToSocket(Weapon, Character->GetMesh(), HeavyWeaponArmorySocketName);
             PlayAnimMontage(HeavyEquipAnimMontage);
         }
         else
         {
-            AttachWeaponToSocket(CurrentWeapon, Character->GetMesh(), WeaponArmorySocketName);
+            AttachWeaponToSocket(Weapon, Character->GetMesh(), WeaponArmorySocketName);
             PlayAnimMontage(EquipAnimMontage);
         }
     }
