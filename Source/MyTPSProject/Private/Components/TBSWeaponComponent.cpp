@@ -48,18 +48,17 @@ void UTBSWeaponComponent::SpawnWeapons()
         if (!Weapon)
             continue;
         Weapon->OnClipEmpty.AddUObject(this, &UTBSWeaponComponent::ChangeClip);
-        Weapon->OnClipEmpty.AddUObject(this, &UTBSWeaponComponent::ChangeClip);
 
         Weapon->SetOwner(Character);
         Weapons.Add(Weapon);
         if (Weapon->GetWeaponHeavy())
         {
-            AttachWeaponToSocket(Weapon, Character->GetMesh(), HeavyWeaponArmorySocketName);
+            AttachWeaponToSocket(CurrentWeapon, Character->GetMesh(), HeavyWeaponArmorySocketName);
             PlayAnimMontage(HeavyEquipAnimMontage);
         }
         else
         {
-            AttachWeaponToSocket(Weapon, Character->GetMesh(), WeaponArmorySocketName);
+            AttachWeaponToSocket(CurrentWeapon, Character->GetMesh(), WeaponArmorySocketName);
             PlayAnimMontage(EquipAnimMontage);
         }
     }
@@ -199,7 +198,6 @@ void UTBSWeaponComponent::StopFire()
         return;
     CurrentWeapon->StopFire();
 }
-
 
 //_________________________________________________WEAPON INFO_______________________________________________________
 bool UTBSWeaponComponent::CanFire() const

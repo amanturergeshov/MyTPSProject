@@ -104,7 +104,6 @@ void ATPSPistolWeapon::DecreaseAmmo()
 {
 
     CurrentAmmo.Bullets--;
-    
     if (IsClipEmpty() && !IsAmmoEmpty())
     {
         OnClipEmpty.Broadcast();

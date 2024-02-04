@@ -83,11 +83,17 @@ public:
     //_____________________________________________________________
     // StartCombat
     UFUNCTION(Server, Reliable)
-    void StartCombat();
-    //_____________________________________________________________
+    void ServerOnStartCombat();
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastOnStartCombat();
+
+    //______________________________________________________________
     // StopCombat
     UFUNCTION(Server, Reliable)
-    void StopCombat();
+    void ServerOnStopCombat();
+    UFUNCTION(NetMulticast, Reliable)
+    void MulticastOnStopCombat();
+
     //______________________________________________________________
     // MoveForward
     UFUNCTION(Server, Unreliable)
@@ -115,6 +121,9 @@ private:
     void OnDeath();
     void OnHealthChanged(float);
 
+    //_____________________COMBAT______________
+    void StartCombat();
+    void StopCombat();
     //_____________________NEXTWEAPON____________
     void NextWeapon();
     //___________________________________________
