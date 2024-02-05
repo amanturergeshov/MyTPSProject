@@ -14,6 +14,7 @@
 #include "EnhancedInputComponent.h"
 #include "EnhancedInputSubsystems.h"
 
+
 ATPSCharacter::ATPSCharacter(const FObjectInitializer& ObjInit)
     : Super(
           ObjInit.SetDefaultSubobjectClass<UTPSCharacterMovementComponent>(ACharacter::CharacterMovementComponentName))
@@ -140,15 +141,17 @@ void ATPSCharacter::OnDeath()
 
     SetLifeSpan(5.0f);
 
-    if (Controller)
+    /*if (Controller)
     {
         Controller->ChangeState(NAME_Spectating);
-    }
+    }*/
     GetCapsuleComponent()->SetCollisionResponseToAllChannels(ECollisionResponse::ECR_Ignore);
     WeaponComponent->StopFire();
 
     GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     GetMesh()->SetSimulatePhysics(true);
+
+    OnDeathForRespawn.Broadcast();
 }
 //
 //void ATPSCharacter::OnHealthChanged(float Health)

@@ -8,6 +8,8 @@
 #include "TPSCharacter.generated.h"
 
 
+DECLARE_DYNAMIC_MULTICAST_DELEGATE(FOnDeathForRespawn);
+
 class UTPSHealthComponent;
 class USpringArmComponent;
 class UCameraComponent;
@@ -128,6 +130,9 @@ private:
     //___________________________________________
 public:
     //_______________________PROPERTIES___________________
+    UPROPERTY(BlueprintAssignable)
+    FOnDeathForRespawn OnDeathForRespawn;
+
     UPROPERTY(Replicated, BlueprintReadWrite)
     bool IsFighting = false;
 
