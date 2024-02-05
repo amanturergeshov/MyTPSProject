@@ -30,8 +30,8 @@ ATPSCharacter::ATPSCharacter(const FObjectInitializer& ObjInit)
     SpringArmComponent->CameraLagSpeed = 15.0f;
     CameraComponent->SetupAttachment(SpringArmComponent, USpringArmComponent::SocketName);
     HealthComponent = CreateDefaultSubobject<UTPSHealthComponent>("HealthComponent");
-    HealthTextComponent = CreateDefaultSubobject<UTextRenderComponent>("HealthTextComponent");
-    HealthTextComponent->SetupAttachment(GetRootComponent());
+    //HealthTextComponent = CreateDefaultSubobject<UTextRenderComponent>("HealthTextComponent");
+    //HealthTextComponent->SetupAttachment(GetRootComponent());
     WeaponComponent = CreateDefaultSubobject<UTBSWeaponComponent>("WeaponComponent");
 
     PrimaryActorTick.bCanEverTick = true;
@@ -56,11 +56,12 @@ void ATPSCharacter::BeginPlay()
     //______________________________________________________________________________________
 
     check(HealthComponent);
-    check(HealthTextComponent);
-
-    OnHealthChanged(HealthComponent->GetHealth());
     HealthComponent->OnDeath.AddUObject(this, &ATPSCharacter::OnDeath);
-    HealthComponent->OnHealthChanged.AddUObject(this, &ATPSCharacter::OnHealthChanged);
+
+
+    //check(HealthTextComponent);
+    //OnHealthChanged(HealthComponent->GetHealth());
+    //HealthComponent->OnHealthChanged.AddUObject(this, &ATPSCharacter::OnHealthChanged);
 }
 
 void ATPSCharacter::Tick(float DeltaTime)
@@ -149,11 +150,11 @@ void ATPSCharacter::OnDeath()
     GetMesh()->SetCollisionEnabled(ECollisionEnabled::QueryAndPhysics);
     GetMesh()->SetSimulatePhysics(true);
 }
-
-void ATPSCharacter::OnHealthChanged(float Health)
-{
-    HealthTextComponent->SetText(FText::FromString(FString::Printf(TEXT("%.0f"), Health)));
-}
+//
+//void ATPSCharacter::OnHealthChanged(float Health)
+//{
+//    HealthTextComponent->SetText(FText::FromString(FString::Printf(TEXT("%.0f"), Health)));
+//}
 
 //-------------------------------------------------COMBAT-----------------------------------------------
 

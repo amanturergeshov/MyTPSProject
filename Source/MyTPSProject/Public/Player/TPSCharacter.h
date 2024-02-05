@@ -122,9 +122,7 @@ private:
 
     //_____________________HEALTH__________
     void OnDeath();
-    void OnHealthChanged(float);
-
-
+    //void OnHealthChanged(float);
     //_____________________NEXTWEAPON____________
     void NextWeapon();
     //___________________________________________
