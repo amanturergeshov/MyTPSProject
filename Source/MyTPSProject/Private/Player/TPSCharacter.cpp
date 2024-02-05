@@ -225,7 +225,7 @@ void ATPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
 // Sprint
 void ATPSCharacter::OnStartSprint_Implementation()
 {
-    StopCombat();
+    IsFighting = false;
     if (!HeavyWeapon())
     {
         WantsToRun = isMovingForward && !GetVelocity().IsZero();
