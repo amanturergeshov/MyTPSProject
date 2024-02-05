@@ -39,10 +39,12 @@ public:
     virtual void StartFire();
     virtual void StopFire();
     //_______________RELOAD____________
+    void DecreaseAmmo();
     void ChangeClip();
     bool CanReload() const;
     //_______________GETINFO____________
     bool GetWeaponHeavy();
+    bool IsAmmoEmpty() const;
     int32 GetBullets();
     int32 GetClips();
     //_______________REPLICATION_______
@@ -56,8 +58,6 @@ protected:
 
     virtual void BeginPlay() override;
     //_______________AMMO______________
-    void DecreaseAmmo();
-    bool IsAmmoEmpty() const;
     bool IsClipEmpty() const;
     //_______________SHOT______________
     virtual void MakeShot();

@@ -4,13 +4,13 @@
 
 void ATPSRevolverWeapon::StartFire()
 {
-     //MakeShot();
-    GetWorldTimerManager().SetTimer(ShotTimerHandle, this, &ATPSRevolverWeapon::MakeShot, TimerBetweenShot, true);
+     MakeShot();
+    //GetWorldTimerManager().SetTimer(ShotTimerHandle, this, &ATPSRevolverWeapon::MakeShot, TimerBetweenShot, true);
 }
 
 void ATPSRevolverWeapon::StopFire()
 {
-    GetWorldTimerManager().ClearTimer(ShotTimerHandle);
+    //GetWorldTimerManager().ClearTimer(ShotTimerHandle);
 }
 
 void ATPSRevolverWeapon::MakeShot()
@@ -39,5 +39,5 @@ void ATPSRevolverWeapon::MakeShot()
         DrawDebugLine(GetWorld(), GetMuzzleWorldLocation(), TraceEnd, FColor::Red, false, 3.0f, 0, 3.0f);
     }
 
-    DecreaseAmmo();
+    //DecreaseAmmo();
 }

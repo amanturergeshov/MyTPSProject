@@ -79,6 +79,7 @@ void UTBSWeaponComponent::NextWeapon()
     EquipWeapon(CurrentWeaponIndex);
 }
 
+
 void UTBSWeaponComponent::EquipWeapon(int32 WeaponIndex)
 {
     ReloadAnimInProgress = false;
@@ -134,8 +135,14 @@ void UTBSWeaponComponent::OnReloadFinished(USkeletalMeshComponent* MeshComp)
         return;
     ReloadAnimInProgress = false;
 }
+void UTBSWeaponComponent::DecreaseAmmo() 
+{
+    if (CanFire() && CurrentWeapon )
+    {
+        CurrentWeapon->DecreaseAmmo();
+    }
 
-
+}
 void UTBSWeaponComponent::ChangeClip()
 {
     ACharacter* Character = Cast<ACharacter>(GetOwner());
@@ -202,7 +209,7 @@ void UTBSWeaponComponent::StopFire()
 //_________________________________________________WEAPON INFO_______________________________________________________
 bool UTBSWeaponComponent::CanFire() const
 {
-    return CurrentWeapon && !ReloadAnimInProgress;
+    return CurrentWeapon && !ReloadAnimInProgress && !CurrentWeapon->IsAmmoEmpty();
 }
 
 bool UTBSWeaponComponent::CanReload() const

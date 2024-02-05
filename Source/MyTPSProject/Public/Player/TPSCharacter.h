@@ -91,8 +91,6 @@ public:
     // StopCombat
     UFUNCTION(Server, Reliable)
     void ServerOnStopCombat();
-    UFUNCTION(NetMulticast, Reliable)
-    void MulticastOnStopCombat();
 
     //______________________________________________________________
     // MoveForward
@@ -105,6 +103,11 @@ public:
     UFUNCTION(NetMulticast, Reliable)
     void MulticastNextWeapon();
     //______________________________________________________________
+    //_____________________COMBAT______________
+    UFUNCTION(Server, Reliable)
+    void StartCombat();
+    UFUNCTION(Server, Reliable)
+    void StopCombat();
 
     UFUNCTION(BlueprintCallable, Category = "Movement")
     bool HeavyWeapon() const;
@@ -121,9 +124,7 @@ private:
     void OnDeath();
     void OnHealthChanged(float);
 
-    //_____________________COMBAT______________
-    void StartCombat();
-    void StopCombat();
+
     //_____________________NEXTWEAPON____________
     void NextWeapon();
     //___________________________________________
@@ -137,4 +138,9 @@ public:
 
     UPROPERTY(Replicated, BlueprintReadWrite)
     bool isMovingForward = false;
+
+    FTimerHandle AttackTimerHandle;
+
+    float TimerBetweenShot = 0.5f;
+    float TimerAfterShot = 1.0f;
 };

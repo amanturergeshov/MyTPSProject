@@ -35,7 +35,7 @@ void ATPSBazookaWeapon::MakeShot()
         Projectile->FinishSpawning(SpawnTransform);
     }
 
-    DecreaseAmmo();
+    //DecreaseAmmo();
 
     // UGameplayStatics::FinishSpawningActor(Projectile, SpawnTransform);
 }

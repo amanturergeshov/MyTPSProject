@@ -63,12 +63,10 @@ void ATPSCharacter::BeginPlay()
     HealthComponent->OnHealthChanged.AddUObject(this, &ATPSCharacter::OnHealthChanged);
 }
 
-
 void ATPSCharacter::Tick(float DeltaTime)
 {
     Super::Tick(DeltaTime);
 }
-
 
 void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -82,25 +80,27 @@ void ATPSCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputCompon
         EnhancedInputComponent->BindAction(JumpAction, ETriggerEvent::Started, this, &ATPSCharacter::Jump);
         EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Triggered, this, &ATPSCharacter::OnStartSprint);
         EnhancedInputComponent->BindAction(SprintAction, ETriggerEvent::Completed, this, &ATPSCharacter::OnStopSprint);
-        EnhancedInputComponent->BindAction(ChangeWeaponAction, ETriggerEvent::Started, this, &ATPSCharacter::NextWeapon);
-        EnhancedInputComponent->BindAction(ReloadAction, ETriggerEvent::Started, WeaponComponent, &UTBSWeaponComponent::ChangeClip);
+        EnhancedInputComponent->BindAction(
+            ChangeWeaponAction, ETriggerEvent::Started, this, &ATPSCharacter::NextWeapon);
+        EnhancedInputComponent->BindAction(
+            ReloadAction, ETriggerEvent::Started, WeaponComponent, &UTBSWeaponComponent::ChangeClip);
         EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Started, this, &ATPSCharacter::StartCombat);
         EnhancedInputComponent->BindAction(ShootAction, ETriggerEvent::Completed, this, &ATPSCharacter::StopCombat);
     }
     //_________________________OLD INPUT SYSTEM_____________________________________________
-    //PlayerInputComponent->BindAxis("MoveForward", this, &ATPSCharacter::MoveForward);
-    //PlayerInputComponent->BindAxis("MoveRight", this, &ATPSCharacter::MoveRight);
-    //PlayerInputComponent->BindAxis("LookUp", this, &ATPSCharacter::AddControllerPitchInput);
-    //PlayerInputComponent->BindAxis("TurnAround", this, &ATPSCharacter::AddControllerYawInput);
-    //PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ATPSCharacter::Jump);
-    //PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ATPSCharacter::OnStartSprint);
-    //PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ATPSCharacter::OnStopSprint);
-    //PlayerInputComponent->BindAction("Shoot", IE_Pressed, WeaponComponent, &UTBSWeaponComponent::StartFire);
-    //PlayerInputComponent->BindAction("Shoot", IE_Released, WeaponComponent, &UTBSWeaponComponent::StopFire);
-    //PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &ATPSCharacter::StartCombat);
-    //PlayerInputComponent->BindAction("Shoot", IE_Released, this, &ATPSCharacter::StopCombat);
-    //PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, WeaponComponent, &UTBSWeaponComponent::NextWeapon);
-    //PlayerInputComponent->BindAction("Reload", IE_Pressed, WeaponComponent, &UTBSWeaponComponent::Reload);
+    // PlayerInputComponent->BindAxis("MoveForward", this, &ATPSCharacter::MoveForward);
+    // PlayerInputComponent->BindAxis("MoveRight", this, &ATPSCharacter::MoveRight);
+    // PlayerInputComponent->BindAxis("LookUp", this, &ATPSCharacter::AddControllerPitchInput);
+    // PlayerInputComponent->BindAxis("TurnAround", this, &ATPSCharacter::AddControllerYawInput);
+    // PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ATPSCharacter::Jump);
+    // PlayerInputComponent->BindAction("Sprint", IE_Pressed, this, &ATPSCharacter::OnStartSprint);
+    // PlayerInputComponent->BindAction("Sprint", IE_Released, this, &ATPSCharacter::OnStopSprint);
+    // PlayerInputComponent->BindAction("Shoot", IE_Pressed, WeaponComponent, &UTBSWeaponComponent::StartFire);
+    // PlayerInputComponent->BindAction("Shoot", IE_Released, WeaponComponent, &UTBSWeaponComponent::StopFire);
+    // PlayerInputComponent->BindAction("Shoot", IE_Pressed, this, &ATPSCharacter::StartCombat);
+    // PlayerInputComponent->BindAction("Shoot", IE_Released, this, &ATPSCharacter::StopCombat);
+    // PlayerInputComponent->BindAction("NextWeapon", IE_Pressed, WeaponComponent, &UTBSWeaponComponent::NextWeapon);
+    // PlayerInputComponent->BindAction("Reload", IE_Pressed, WeaponComponent, &UTBSWeaponComponent::Reload);
 }
 
 //-------------------------------------------------MOVEMENT-----------------------------------------------
@@ -111,7 +111,6 @@ void ATPSCharacter::Move(const FInputActionValue& Value)
     MoveForward(MovementVector.Y);
     MoveRight(MovementVector.X);
 }
-
 
 bool ATPSCharacter::HeavyWeapon() const
 {
@@ -128,8 +127,6 @@ void ATPSCharacter::MoveRight(float Amount)
 {
     AddMovementInput(GetActorRightVector(), Amount);
 }
-
-
 
 //-------------------------------------------------HEALTH-----------------------------------------------
 void ATPSCharacter::OnDeath()
@@ -158,37 +155,39 @@ void ATPSCharacter::OnHealthChanged(float Health)
     HealthTextComponent->SetText(FText::FromString(FString::Printf(TEXT("%.0f"), Health)));
 }
 
-
 //-------------------------------------------------COMBAT-----------------------------------------------
 
-void ATPSCharacter::StartCombat()
+void ATPSCharacter::StartCombat_Implementation()
 {
-    if (HasAuthority())
+    if (!WantsToRun)
     {
-        MulticastOnStartCombat();
-    }
-    else
-    {
-
-        ServerOnStartCombat();
+        if (HeavyWeapon() || IsFighting)
+        {
+            ServerOnStartCombat();
+        }
+        else
+        {
+            IsFighting = true;
+            GetWorldTimerManager().SetTimer(AttackTimerHandle, this, &ATPSCharacter::ServerOnStartCombat, TimerBetweenShot, false);
+        }
     }
 }
 
-void ATPSCharacter::StopCombat()
+void ATPSCharacter::StopCombat_Implementation()
 {
-    if (HasAuthority())
+    if (!HeavyWeapon())
     {
-        MulticastOnStopCombat();
+        GetWorldTimerManager().SetTimer(
+            AttackTimerHandle, this, &ATPSCharacter::ServerOnStopCombat, TimerAfterShot, false);
     }
     else
     {
-
-        ServerOnStopCombat();
+        IsFighting = false;
     }
 }
 //_________________________________NEXT WEAPON____________________________________
 
-void ATPSCharacter::NextWeapon() 
+void ATPSCharacter::NextWeapon()
 {
     if (WeaponComponent)
     {
@@ -215,7 +214,7 @@ void ATPSCharacter::GetLifetimeReplicatedProps(TArray<FLifetimeProperty>& OutLif
     DOREPLIFETIME(ATPSCharacter, isMovingForward);
 }
 //________________________________________________
-//Sprint
+// Sprint
 void ATPSCharacter::OnStartSprint_Implementation()
 {
     StopCombat();
@@ -233,45 +232,42 @@ void ATPSCharacter::OnStopSprint_Implementation()
 // StartCombat
 void ATPSCharacter::ServerOnStartCombat_Implementation()
 {
+    WeaponComponent->StartFire();
     MulticastOnStartCombat();
 }
 void ATPSCharacter::MulticastOnStartCombat_Implementation()
 {
-        if (!WantsToRun)
-        {
-            IsFighting = true;
-            WeaponComponent->StartFire();
-        }
+    WeaponComponent->DecreaseAmmo();
 }
 //_______________________________________________________
 // StopCombat
 void ATPSCharacter::ServerOnStopCombat_Implementation()
 {
-    MulticastOnStopCombat();
+    IsFighting = false;
+    WeaponComponent->StopFire();
+    //MulticastOnStopCombat();
 }
-void ATPSCharacter::MulticastOnStopCombat_Implementation()
-{
-        IsFighting = false;
-        WeaponComponent->StopFire();
-}
+//void ATPSCharacter::MulticastOnStopCombat_Implementation()
+//{
+//
+//}
 //_____________________________________________________
-//MoveForward
+// MoveForward
 
-void ATPSCharacter::ServerMoveForward_Implementation(float Amount) 
+void ATPSCharacter::ServerMoveForward_Implementation(float Amount)
 {
     isMovingForward = Amount > 0.0f;
 }
 
 //__________________________________________________________
-//NextWeapon
+// NextWeapon
 
-void ATPSCharacter::ServerNextWeapon_Implementation() 
+void ATPSCharacter::ServerNextWeapon_Implementation()
 {
     MulticastNextWeapon();
-
 }
 
-void ATPSCharacter::MulticastNextWeapon_Implementation() 
+void ATPSCharacter::MulticastNextWeapon_Implementation()
 {
     if (!IsLocallyControlled())
     {

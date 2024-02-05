@@ -31,6 +31,7 @@ public:
     void StartFire();
     void StopFire();
     void NextWeapon();
+    void DecreaseAmmo();
     void ChangeClip();
     //__________________________________________GETINFO____________________________________
     UFUNCTION(BlueprintCallable)
