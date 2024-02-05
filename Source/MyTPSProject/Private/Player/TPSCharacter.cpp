@@ -168,21 +168,25 @@ void ATPSCharacter::StartCombat_Implementation()
         else
         {
             IsFighting = true;
-            GetWorldTimerManager().SetTimer(AttackTimerHandle, this, &ATPSCharacter::ServerOnStartCombat, TimerBetweenShot, false);
+            GetWorldTimerManager().SetTimer(
+                AttackTimerHandle, this, &ATPSCharacter::ServerOnStartCombat, TimerBetweenShot, false);
         }
     }
 }
 
 void ATPSCharacter::StopCombat_Implementation()
 {
-    if (!HeavyWeapon())
+    if (InZoom==false)
     {
-        GetWorldTimerManager().SetTimer(
-            AttackTimerHandle, this, &ATPSCharacter::ServerOnStopCombat, TimerAfterShot, false);
-    }
-    else
-    {
-        IsFighting = false;
+        if (!HeavyWeapon())
+        {
+            GetWorldTimerManager().SetTimer(
+                StopAttackTimerHandle, this, &ATPSCharacter::ServerOnStopCombat, TimerAfterShot, false);
+        }
+        else
+        {
+            IsFighting = false;
+        }
     }
 }
 //_________________________________NEXT WEAPON____________________________________
@@ -245,14 +249,7 @@ void ATPSCharacter::ServerOnStopCombat_Implementation()
 {
     IsFighting = false;
     WeaponComponent->StopFire();
-    //MulticastOnStopCombat();
 }
-//void ATPSCharacter::MulticastOnStopCombat_Implementation()
-//{
-//
-//}
-//_____________________________________________________
-// MoveForward
 
 void ATPSCharacter::ServerMoveForward_Implementation(float Amount)
 {

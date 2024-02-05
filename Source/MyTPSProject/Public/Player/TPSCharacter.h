@@ -139,8 +139,13 @@ public:
     UPROPERTY(Replicated, BlueprintReadWrite)
     bool isMovingForward = false;
 
+    UPROPERTY(BlueprintReadWrite)
+    bool InZoom = false;
+
     FTimerHandle AttackTimerHandle;
+    FTimerHandle StopAttackTimerHandle;
 
     float TimerBetweenShot = 0.5f;
-    float TimerAfterShot = 1.0f;
+
+    float TimerAfterShot = 2.0f;
 };
